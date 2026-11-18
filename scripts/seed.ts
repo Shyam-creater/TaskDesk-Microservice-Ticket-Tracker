@@ -6,9 +6,10 @@ import path from 'path';
 dotenv.config();
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
-const MONGODB_URI =
-  process.env.MONGODB_URI ||
-  'mongodb+srv://TASKDESK:SMAA5VZfA7rzR9qA@cluster0.rfz95.mongodb.net/TASKDESK?retryWrites=true&w=majority';
+const MONGODB_URI = process.env.MONGODB_URI;
+if (!MONGODB_URI) {
+  throw new Error('MONGODB_URI is required in .env');
+}
 
 // User Schema
 const userSchema = new mongoose.Schema(

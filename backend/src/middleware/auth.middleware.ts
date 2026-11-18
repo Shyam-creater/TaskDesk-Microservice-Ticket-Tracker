@@ -3,8 +3,13 @@ import jwt from 'jsonwebtoken';
 import { UnauthorizedError, ForbiddenError } from './error.middleware.js';
 import { UserRole } from '../models/user.model.js';
 
-const JWT_SECRET =
-  process.env.JWT_SECRET || 'supersecret_jwt_signing_key_at_least_32_characters_long_for_security';
+function getJwtSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error('JWT_SECRET must be configured in .env');
+  }
+  return secret;
+}
 
 export interface UserPayload {
   id: string;
@@ -29,7 +34,7 @@ export const authenticateToken = (
 
   const token = authHeader.split(' ')[1];
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as UserPayload;
+    const decoded = jwt.verify(token, getJwtSecret()) as UserPayload;
     req.user = decoded;
     next();
   } catch {

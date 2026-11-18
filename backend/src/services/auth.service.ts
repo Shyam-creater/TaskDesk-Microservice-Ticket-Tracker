@@ -3,9 +3,13 @@ import jwt from 'jsonwebtoken';
 import { User, IUser, UserRole } from '../models/user.model.js';
 import { ConflictError, UnauthorizedError, NotFoundError } from '../middleware/error.middleware.js';
 
-const JWT_SECRET =
-  process.env.JWT_SECRET || 'supersecret_jwt_signing_key_at_least_32_characters_long_for_security';
-const JWT_EXPIRES_IN = (process.env.JWT_EXPIRES_IN || '7d') as jwt.SignOptions['expiresIn'];
+function getJwtSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error('JWT_SECRET must be configured in .env');
+  }
+  return secret;
+}
 
 export interface RegisterDTO {
   name: string;
@@ -30,6 +34,7 @@ export interface AuthResponse {
 
 export class AuthService {
   private generateToken(user: IUser): string {
+    const expiresIn = (process.env.JWT_EXPIRES_IN || '7d') as jwt.SignOptions['expiresIn'];
     return jwt.sign(
       {
         id: user._id.toString(),
@@ -37,8 +42,8 @@ export class AuthService {
         role: user.role,
         name: user.name,
       },
-      JWT_SECRET,
-      { expiresIn: JWT_EXPIRES_IN }
+      getJwtSecret(),
+      { expiresIn }
     );
   }
 

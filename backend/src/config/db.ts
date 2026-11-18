@@ -1,10 +1,11 @@
 import mongoose from 'mongoose';
 
-const DEFAULT_MONGO_URI =
-  'mongodb+srv://TASKDESK:SMAA5VZfA7rzR9qA@cluster0.rfz95.mongodb.net/TASKDESK?retryWrites=true&w=majority';
-
 export async function connectDB(): Promise<typeof mongoose> {
-  const mongoUri = process.env.MONGODB_URI || DEFAULT_MONGO_URI;
+  const mongoUri = process.env.MONGODB_URI;
+  if (!mongoUri) {
+    throw new Error('MONGODB_URI must be configured in .env');
+  }
+
   try {
     console.log(`📡 Connecting to MongoDB at: ${mongoUri.replace(/:([^@]+)@/, ':****@')}`);
     const conn = await mongoose.connect(mongoUri);
