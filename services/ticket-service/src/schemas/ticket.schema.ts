@@ -35,28 +35,47 @@ export const updateTicketSchema = z
       .trim()
       .max(1000, 'Description cannot exceed 1000 characters')
       .optional(),
-    status: z
-      .enum(['open', 'in_progress', 'closed'], {
-        errorMap: () => ({ message: 'Status must be one of: open, in_progress, closed' }),
-      })
-      .optional(),
-    priority: z
-      .enum(['low', 'medium', 'high'], {
-        errorMap: () => ({ message: 'Priority must be one of: low, medium, high' }),
-      })
-      .optional(),
   })
   .strict()
   .refine(
-    (data) => data.title !== undefined || data.description !== undefined || data.status !== undefined || data.priority !== undefined,
-    { message: 'At least one field must be provided for update' }
+    (data) => data.title !== undefined || data.description !== undefined,
+    { message: 'At least title or description must be provided for update' }
   );
+
+export const updateStatusSchema = z
+  .object({
+    status: z.enum(['open', 'in_review', 'in_progress', 'resolved', 'closed'], {
+      errorMap: (issue) => {
+        if (issue.code === 'invalid_type') {
+          return { message: 'Status is required' };
+        }
+        return { message: 'Status must be one of: open, in_review, in_progress, resolved, closed' };
+      },
+    }),
+  })
+  .strict();
+
+export const reviewTicketSchema = z
+  .object({
+    priority: z.enum(['low', 'medium', 'high']).optional(),
+  })
+  .strict();
+
+export const createMessageSchema = z
+  .object({
+    body: z
+      .string({ required_error: 'Message body is required' })
+      .trim()
+      .min(1, 'Message cannot be empty')
+      .max(1000, 'Message cannot exceed 1000 characters'),
+  })
+  .strict();
 
 export const ticketQuerySchema = z
   .object({
     page: z.coerce.number().int().min(1).default(1),
     limit: z.coerce.number().int().min(1).max(100).default(10),
-    status: z.enum(['open', 'in_progress', 'closed']).optional(),
+    status: z.enum(['open', 'in_review', 'in_progress', 'resolved', 'closed']).optional(),
     priority: z.enum(['low', 'medium', 'high']).optional(),
   })
   .strict();
@@ -69,4 +88,7 @@ export const ticketIdParamSchema = z
 
 export type CreateTicketInput = z.infer<typeof createTicketSchema>;
 export type UpdateTicketInput = z.infer<typeof updateTicketSchema>;
+export type UpdateStatusInput = z.infer<typeof updateStatusSchema>;
+export type ReviewTicketInput = z.infer<typeof reviewTicketSchema>;
+export type CreateMessageInput = z.infer<typeof createMessageSchema>;
 export type TicketQueryInput = z.infer<typeof ticketQuerySchema>;

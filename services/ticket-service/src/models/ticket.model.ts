@@ -1,7 +1,14 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
-export type TicketStatus = 'open' | 'in_progress' | 'closed';
+export type TicketStatus = 'open' | 'in_review' | 'in_progress' | 'resolved' | 'closed';
 export type TicketPriority = 'low' | 'medium' | 'high';
+
+export interface IStatusHistoryItem {
+  from: TicketStatus;
+  to: TicketStatus;
+  changedBy: string;
+  changedAt: Date;
+}
 
 export interface ITicket extends Document {
   _id: mongoose.Types.ObjectId;
@@ -10,9 +17,36 @@ export interface ITicket extends Document {
   status: TicketStatus;
   priority: TicketPriority;
   createdBy: string;
+  reviewedBy?: string;
+  reviewedAt?: Date;
+  statusHistory: IStatusHistoryItem[];
   createdAt: Date;
   updatedAt: Date;
 }
+
+const StatusHistorySchema = new Schema<IStatusHistoryItem>(
+  {
+    from: {
+      type: String,
+      enum: ['open', 'in_review', 'in_progress', 'resolved', 'closed'],
+      required: true,
+    },
+    to: {
+      type: String,
+      enum: ['open', 'in_review', 'in_progress', 'resolved', 'closed'],
+      required: true,
+    },
+    changedBy: {
+      type: String,
+      required: true,
+    },
+    changedAt: {
+      type: Date,
+      default: Date.now,
+    },
+  },
+  { _id: false }
+);
 
 const TicketSchema = new Schema<ITicket>(
   {
@@ -31,7 +65,7 @@ const TicketSchema = new Schema<ITicket>(
     },
     status: {
       type: String,
-      enum: ['open', 'in_progress', 'closed'],
+      enum: ['open', 'in_review', 'in_progress', 'resolved', 'closed'],
       default: 'open',
       required: true,
     },
@@ -46,6 +80,18 @@ const TicketSchema = new Schema<ITicket>(
       required: true,
       index: true,
     },
+    reviewedBy: {
+      type: String,
+      default: undefined,
+    },
+    reviewedAt: {
+      type: Date,
+      default: undefined,
+    },
+    statusHistory: {
+      type: [StatusHistorySchema],
+      default: [],
+    },
   },
   {
     timestamps: true,
@@ -58,10 +104,13 @@ const TicketSchema = new Schema<ITicket>(
   }
 );
 
-// Compound index on { createdBy: 1, status: 1 } for filtered user queries
+// Compound index for user queries with status filter
 TicketSchema.index({ createdBy: 1, status: 1 });
 
-// Index on { createdAt: -1 } for fast chronological sorting and pagination
+// Compound index for admin filters by status and priority
+TicketSchema.index({ status: 1, priority: 1 });
+
+// Index for chronological ordering
 TicketSchema.index({ createdAt: -1 });
 
 export const Ticket = mongoose.model<ITicket>('Ticket', TicketSchema);

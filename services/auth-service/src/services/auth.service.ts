@@ -36,11 +36,12 @@ export class AuthService {
     const saltRounds = 10;
     const passwordHash = await bcrypt.hash(input.password, saltRounds);
 
+    // New accounts are always strictly assigned role 'user'. Admin accounts are seeded only.
     const user = await this.userRepo.create({
       name: input.name,
       email: input.email,
       passwordHash,
-      role: input.role,
+      role: 'user',
     });
 
     const token = this.generateToken(user._id.toString(), user.email, user.role);

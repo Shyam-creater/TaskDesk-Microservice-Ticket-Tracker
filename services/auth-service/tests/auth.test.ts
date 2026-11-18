@@ -51,6 +51,20 @@ describe('Auth Service Tests', () => {
       expect(res.body.data.user).not.toHaveProperty('password');
     });
 
+    it('should ignore role: admin in registration payload and enforce role: user', async () => {
+      const res = await request(app)
+        .post('/auth/register')
+        .send({
+          name: 'Malicious Attempt',
+          email: 'wannabeadmin@example.com',
+          password: 'Password123!',
+          role: 'admin',
+        });
+
+      expect(res.status).toBe(201);
+      expect(res.body.data.user.role).toBe('user');
+    });
+
     it('should reject registration with duplicate email with 409 Conflict', async () => {
       // First registration
       await request(app).post('/auth/register').send(testUser);

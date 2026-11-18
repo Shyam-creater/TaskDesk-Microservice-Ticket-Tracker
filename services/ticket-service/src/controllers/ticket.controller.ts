@@ -11,13 +11,9 @@ export class TicketController {
 
   createTicket = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      if (!req.user) {
-        throw new UnauthorizedError('Authentication required');
-      }
+      if (!req.user) throw new UnauthorizedError('Authentication required');
       const ticket = await this.service.createTicket(req.body, req.user);
-      res.status(201).json({
-        data: { ticket },
-      });
+      res.status(201).json({ data: { ticket } });
     } catch (error) {
       next(error);
     }
@@ -25,13 +21,22 @@ export class TicketController {
 
   listTickets = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      if (!req.user) {
-        throw new UnauthorizedError('Authentication required');
-      }
-      const result = await this.service.listTickets(req.user, req.query as unknown as Parameters<TicketService['listTickets']>[1]);
-      res.status(200).json({
-        data: result,
-      });
+      if (!req.user) throw new UnauthorizedError('Authentication required');
+      const result = await this.service.listTickets(
+        req.user,
+        req.query as unknown as Parameters<TicketService['listTickets']>[1]
+      );
+      res.status(200).json({ data: result });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  getStats = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      if (!req.user) throw new UnauthorizedError('Authentication required');
+      const stats = await this.service.getStats(req.user);
+      res.status(200).json({ data: { stats } });
     } catch (error) {
       next(error);
     }
@@ -39,27 +44,39 @@ export class TicketController {
 
   getTicketById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      if (!req.user) {
-        throw new UnauthorizedError('Authentication required');
-      }
+      if (!req.user) throw new UnauthorizedError('Authentication required');
       const ticket = await this.service.getTicketById(req.params.id, req.user);
-      res.status(200).json({
-        data: { ticket },
-      });
+      res.status(200).json({ data: { ticket } });
     } catch (error) {
       next(error);
     }
   };
 
-  updateTicket = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  updateTicketContent = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      if (!req.user) {
-        throw new UnauthorizedError('Authentication required');
-      }
-      const ticket = await this.service.updateTicket(req.params.id, req.body, req.user);
-      res.status(200).json({
-        data: { ticket },
-      });
+      if (!req.user) throw new UnauthorizedError('Authentication required');
+      const ticket = await this.service.updateTicketContent(req.params.id, req.body, req.user);
+      res.status(200).json({ data: { ticket } });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  updateTicketStatus = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      if (!req.user) throw new UnauthorizedError('Authentication required');
+      const ticket = await this.service.updateTicketStatus(req.params.id, req.body, req.user);
+      res.status(200).json({ data: { ticket } });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  reviewTicket = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      if (!req.user) throw new UnauthorizedError('Authentication required');
+      const ticket = await this.service.reviewTicket(req.params.id, req.body, req.user);
+      res.status(200).json({ data: { ticket } });
     } catch (error) {
       next(error);
     }
@@ -67,13 +84,29 @@ export class TicketController {
 
   deleteTicket = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      if (!req.user) {
-        throw new UnauthorizedError('Authentication required');
-      }
+      if (!req.user) throw new UnauthorizedError('Authentication required');
       const result = await this.service.deleteTicket(req.params.id, req.user);
-      res.status(200).json({
-        data: result,
-      });
+      res.status(200).json({ data: result });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  getMessages = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      if (!req.user) throw new UnauthorizedError('Authentication required');
+      const messages = await this.service.getMessages(req.params.id, req.user);
+      res.status(200).json({ data: { messages } });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  postMessage = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      if (!req.user) throw new UnauthorizedError('Authentication required');
+      const message = await this.service.postMessage(req.params.id, req.body, req.user);
+      res.status(201).json({ data: { message } });
     } catch (error) {
       next(error);
     }

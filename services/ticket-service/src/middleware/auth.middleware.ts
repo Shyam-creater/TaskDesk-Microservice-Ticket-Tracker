@@ -48,3 +48,21 @@ export const requireAdmin = (req: Request, _res: Response, next: NextFunction): 
   }
   next();
 };
+
+export const requireUser = (req: Request, _res: Response, next: NextFunction): void => {
+  if (!req.user || req.user.role !== 'user') {
+    next(new ForbiddenError('Access forbidden: administrators cannot create tickets'));
+    return;
+  }
+  next();
+};
+
+export const requireRole = (role: 'user' | 'admin') => {
+  return (req: Request, _res: Response, next: NextFunction): void => {
+    if (!req.user || req.user.role !== role) {
+      next(new ForbiddenError(`Access forbidden: ${role} privileges required`));
+      return;
+    }
+    next();
+  };
+};
