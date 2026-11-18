@@ -10,7 +10,7 @@ import { CreateTicketModal } from '../components/CreateTicketModal';
 import { TicketDetailModal } from '../components/TicketDetailModal';
 import { ViewToggle, ViewMode } from '../components/ViewToggle';
 import { Skeleton } from '../components/Skeleton';
-import { Plus, Ticket as TicketIcon, Calendar, MessageSquare, ChevronRight, Tag } from 'lucide-react';
+import { Plus, Ticket as TicketIcon, Calendar, MessageSquare, ChevronRight, Tag, CheckCircle2 } from 'lucide-react';
 
 export const TicketsPage: React.FC = () => {
   const { isAdmin } = useAuth();
@@ -414,76 +414,76 @@ export const TicketsPage: React.FC = () => {
                 year: 'numeric',
               });
 
+              const priorityColor =
+                ticket.priority === 'high'
+                  ? '#FF3B30'
+                  : ticket.priority === 'medium'
+                  ? '#FF9500'
+                  : '#0071E3';
+
               return (
                 <div
                   key={ticket._id}
                   onClick={() => setSelectedTicket(ticket)}
                   style={{
-                    backgroundColor: 'var(--surface)',
-                    borderRadius: 'var(--radius-md)',
-                    border: '1px solid var(--border-light)',
-                    boxShadow: 'var(--shadow-subtle)',
-                    padding: '20px 22px',
+                    backgroundColor: '#FFFFFF',
+                    borderRadius: 14,
+                    border: '1px solid #E5E5EA',
+                    borderLeft: `4px solid ${priorityColor}`,
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+                    padding: '20px 22px 16px',
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'space-between',
                     cursor: 'pointer',
-                    transition: 'transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast)',
+                    transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-2px)';
-                    e.currentTarget.style.boxShadow = 'var(--shadow-card)';
-                    e.currentTarget.style.borderColor = 'var(--border-color)';
+                    e.currentTarget.style.transform = 'translateY(-3px)';
+                    e.currentTarget.style.boxShadow = '0 12px 26px rgba(0, 0, 0, 0.08)';
+                    e.currentTarget.style.borderColor = 'rgba(0, 113, 227, 0.35)';
+                    e.currentTarget.style.borderLeftColor = priorityColor;
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.transform = 'none';
-                    e.currentTarget.style.boxShadow = 'var(--shadow-subtle)';
-                    e.currentTarget.style.borderColor = 'var(--border-light)';
+                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.04)';
+                    e.currentTarget.style.borderColor = '#E5E5EA';
+                    e.currentTarget.style.borderLeftColor = priorityColor;
                   }}
                 >
                   <div>
-                    {/* Header Badges */}
+                    {/* Header: Left ID & Priority, Right Status */}
                     <div
                       style={{
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
+                        gap: 8,
                         marginBottom: 12,
                       }}
                     >
-                      <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                         <span
                           style={{
                             display: 'inline-flex',
                             alignItems: 'center',
                             gap: 4,
-                            padding: '2px 8px',
-                            borderRadius: 4,
-                            backgroundColor: 'var(--accent-subtle)',
+                            padding: '3px 8px',
+                            borderRadius: 6,
+                            backgroundColor: 'rgba(0, 113, 227, 0.08)',
                             color: 'var(--accent-primary)',
                             fontSize: 12,
                             fontWeight: 700,
                             fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                            letterSpacing: '0.02em',
                           }}
                         >
                           <Tag size={11} />
                           <span>{formatTicketId(ticket)}</span>
                         </span>
-                        <StatusBadge status={ticket.status} />
                         <PriorityBadge priority={ticket.priority} />
                       </div>
-                      <span
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 4,
-                          fontSize: 12,
-                          color: 'var(--text-tertiary)',
-                        }}
-                      >
-                        <Calendar size={13} />
-                        {formattedDate}
-                      </span>
+                      <StatusBadge status={ticket.status} />
                     </div>
 
                     {/* Title */}
@@ -493,7 +493,9 @@ export const TicketsPage: React.FC = () => {
                         fontWeight: 600,
                         color: 'var(--text-primary)',
                         lineHeight: 1.35,
-                        marginBottom: 8,
+                        marginTop: 10,
+                        marginBottom: 6,
+                        letterSpacing: '-0.01em',
                       }}
                     >
                       {ticket.title}
@@ -502,35 +504,93 @@ export const TicketsPage: React.FC = () => {
                     {/* Description */}
                     <p
                       style={{
-                        fontSize: 14,
+                        fontSize: 13,
                         color: 'var(--text-secondary)',
-                        lineHeight: 1.45,
-                        marginBottom: 16,
+                        lineHeight: 1.5,
+                        marginBottom: 14,
                         display: '-webkit-box',
-                        WebkitLineClamp: 3,
+                        WebkitLineClamp: 2,
                         WebkitBoxOrient: 'vertical',
                         overflow: 'hidden',
                       }}
                     >
                       {ticket.description || 'No additional details provided.'}
                     </p>
+
+                    {/* Meta Row: Date & Review status */}
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        fontSize: 12,
+                        color: 'var(--text-tertiary)',
+                        marginBottom: 14,
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                        <Calendar size={12} />
+                        <span>Created {formattedDate}</span>
+                      </div>
+                      {ticket.reviewedAt && (
+                        <span
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 4,
+                            color: '#5856D6',
+                            fontWeight: 600,
+                            fontSize: 11,
+                          }}
+                        >
+                          <CheckCircle2 size={12} />
+                          Reviewed
+                        </span>
+                      )}
+                    </div>
                   </div>
 
-                  {/* Footer: View & Chat Action Bar */}
+                  {/* Footer Action Bar */}
                   <div
                     style={{
-                      paddingTop: 14,
-                      borderTop: '1px solid var(--border-light)',
+                      paddingTop: 12,
+                      borderTop: '1px solid #F2F2F7',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--accent-primary)', fontSize: 13, fontWeight: 600 }}>
-                      <MessageSquare size={14} />
-                      <span>Open Ticket & Chat</span>
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 5,
+                        color: 'var(--text-secondary)',
+                        fontSize: 12,
+                        fontWeight: 500,
+                      }}
+                    >
+                      <MessageSquare size={13} color="var(--accent-primary)" />
+                      <span>Live Chat</span>
                     </div>
-                    <ChevronRight size={16} color="var(--text-tertiary)" />
+
+                    <span
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 4,
+                        padding: '5px 12px',
+                        borderRadius: 8,
+                        backgroundColor: 'var(--accent-primary)',
+                        color: '#FFFFFF',
+                        fontSize: 12,
+                        fontWeight: 600,
+                        boxShadow: '0 2px 6px rgba(0, 113, 227, 0.25)',
+                      }}
+                    >
+                      <span>Open Ticket</span>
+                      <ChevronRight size={13} />
+                    </span>
                   </div>
                 </div>
               );

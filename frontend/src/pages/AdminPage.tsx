@@ -723,76 +723,76 @@ export const AdminPage: React.FC = () => {
                 year: 'numeric',
               });
 
+              const priorityColor =
+                ticket.priority === 'high'
+                  ? '#FF3B30'
+                  : ticket.priority === 'medium'
+                  ? '#FF9500'
+                  : '#0071E3';
+
               return (
                 <div
                   key={ticket._id}
                   onClick={() => setSelectedTicket(ticket)}
                   style={{
-                    backgroundColor: 'var(--surface)',
-                    borderRadius: 'var(--radius-md)',
-                    border: '1px solid var(--border-light)',
-                    boxShadow: 'var(--shadow-subtle)',
-                    padding: '20px 22px',
+                    backgroundColor: '#FFFFFF',
+                    borderRadius: 14,
+                    border: '1px solid #E5E5EA',
+                    borderLeft: `4px solid ${priorityColor}`,
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+                    padding: '20px 22px 16px',
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'space-between',
                     cursor: 'pointer',
-                    transition: 'transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast)',
+                    transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-2px)';
-                    e.currentTarget.style.boxShadow = 'var(--shadow-card)';
-                    e.currentTarget.style.borderColor = 'var(--border-color)';
+                    e.currentTarget.style.transform = 'translateY(-3px)';
+                    e.currentTarget.style.boxShadow = '0 12px 26px rgba(0, 0, 0, 0.08)';
+                    e.currentTarget.style.borderColor = 'rgba(0, 113, 227, 0.35)';
+                    e.currentTarget.style.borderLeftColor = priorityColor;
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.transform = 'none';
-                    e.currentTarget.style.boxShadow = 'var(--shadow-subtle)';
-                    e.currentTarget.style.borderColor = 'var(--border-light)';
+                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.04)';
+                    e.currentTarget.style.borderColor = '#E5E5EA';
+                    e.currentTarget.style.borderLeftColor = priorityColor;
                   }}
                 >
                   <div>
-                    {/* Header Badges */}
+                    {/* Header: Left ID & Priority, Right Status */}
                     <div
                       style={{
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
+                        gap: 8,
                         marginBottom: 12,
                       }}
                     >
-                      <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                         <span
                           style={{
                             display: 'inline-flex',
                             alignItems: 'center',
                             gap: 4,
-                            padding: '2px 8px',
-                            borderRadius: 4,
-                            backgroundColor: 'var(--accent-subtle)',
+                            padding: '3px 8px',
+                            borderRadius: 6,
+                            backgroundColor: 'rgba(0, 113, 227, 0.08)',
                             color: 'var(--accent-primary)',
                             fontSize: 12,
                             fontWeight: 700,
                             fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                            letterSpacing: '0.02em',
                           }}
                         >
                           <Tag size={11} />
                           <span>{formatTicketId(ticket)}</span>
                         </span>
-                        <StatusBadge status={ticket.status} />
                         <PriorityBadge priority={ticket.priority} />
                       </div>
-                      <span
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 4,
-                          fontSize: 12,
-                          color: 'var(--text-tertiary)',
-                        }}
-                      >
-                        <Calendar size={13} />
-                        {formattedDate}
-                      </span>
+                      <StatusBadge status={ticket.status} />
                     </div>
 
                     {/* Title */}
@@ -802,7 +802,9 @@ export const AdminPage: React.FC = () => {
                         fontWeight: 600,
                         color: 'var(--text-primary)',
                         lineHeight: 1.35,
-                        marginBottom: 8,
+                        marginTop: 10,
+                        marginBottom: 6,
+                        letterSpacing: '-0.01em',
                       }}
                     >
                       {ticket.title}
@@ -811,12 +813,12 @@ export const AdminPage: React.FC = () => {
                     {/* Description */}
                     <p
                       style={{
-                        fontSize: 14,
+                        fontSize: 13,
                         color: 'var(--text-secondary)',
-                        lineHeight: 1.45,
+                        lineHeight: 1.5,
                         marginBottom: 14,
                         display: '-webkit-box',
-                        WebkitLineClamp: 3,
+                        WebkitLineClamp: 2,
                         WebkitBoxOrient: 'vertical',
                         overflow: 'hidden',
                       }}
@@ -824,23 +826,64 @@ export const AdminPage: React.FC = () => {
                       {ticket.description || 'No additional details provided.'}
                     </p>
 
-                    {/* User Creator Tag */}
-                    <div style={{ marginBottom: 16 }}>
+                    {/* User Creator Tag & Date */}
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: 8,
+                        marginBottom: 14,
+                        padding: '8px 10px',
+                        backgroundColor: '#F8F9FA',
+                        borderRadius: 8,
+                        border: '1px solid #F0F0F2',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 7, minWidth: 0 }}>
+                        <div
+                          style={{
+                            width: 22,
+                            height: 22,
+                            borderRadius: '50%',
+                            backgroundColor: 'rgba(0, 113, 227, 0.12)',
+                            color: 'var(--accent-primary)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: 11,
+                            fontWeight: 700,
+                            flexShrink: 0,
+                            textTransform: 'uppercase',
+                          }}
+                        >
+                          {getUserDisplayName(ticket).charAt(0) || 'U'}
+                        </div>
+                        <span
+                          style={{
+                            fontSize: 12,
+                            fontWeight: 600,
+                            color: 'var(--text-primary)',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                          }}
+                        >
+                          {getUserDisplayName(ticket)}
+                        </span>
+                      </div>
                       <span
                         style={{
-                          display: 'inline-flex',
+                          display: 'flex',
                           alignItems: 'center',
-                          gap: 6,
-                          fontSize: 12,
-                          fontWeight: 500,
-                          color: 'var(--text-primary)',
-                          backgroundColor: '#F2F2F7',
-                          padding: '4px 10px',
-                          borderRadius: 'var(--radius-sm)',
+                          gap: 4,
+                          fontSize: 11,
+                          color: 'var(--text-tertiary)',
+                          flexShrink: 0,
                         }}
                       >
-                        <User size={12} color="var(--accent-primary)" />
-                        <span>Raised by: <strong>{getUserDisplayName(ticket)}</strong></span>
+                        <Calendar size={12} />
+                        {formattedDate}
                       </span>
                     </div>
                   </div>
@@ -848,8 +891,8 @@ export const AdminPage: React.FC = () => {
                   {/* Footer Action Bar */}
                   <div
                     style={{
-                      paddingTop: 14,
-                      borderTop: '1px solid var(--border-light)',
+                      paddingTop: 12,
+                      borderTop: '1px solid #F2F2F7',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
@@ -859,20 +902,22 @@ export const AdminPage: React.FC = () => {
                     <button
                       onClick={() => setSelectedTicket(ticket)}
                       style={{
-                        display: 'flex',
+                        display: 'inline-flex',
                         alignItems: 'center',
                         gap: 6,
                         padding: '6px 12px',
-                        borderRadius: 'var(--radius-sm)',
-                        backgroundColor: 'var(--accent-subtle)',
-                        color: 'var(--accent-primary)',
-                        fontSize: 13,
+                        borderRadius: 8,
+                        backgroundColor: 'var(--accent-primary)',
+                        color: '#FFFFFF',
+                        fontSize: 12,
                         fontWeight: 600,
-                        border: '1px solid rgba(0, 113, 227, 0.2)',
+                        border: 'none',
                         cursor: 'pointer',
+                        boxShadow: '0 2px 6px rgba(0, 113, 227, 0.25)',
+                        transition: 'all 0.15s ease',
                       }}
                     >
-                      <MessageSquare size={14} />
+                      <MessageSquare size={13} />
                       <span>Manage & Chat</span>
                     </button>
 
@@ -880,17 +925,18 @@ export const AdminPage: React.FC = () => {
                       onClick={() => setTicketToDelete(ticket)}
                       aria-label="Delete ticket"
                       style={{
-                        display: 'flex',
+                        display: 'inline-flex',
                         alignItems: 'center',
                         gap: 4,
                         padding: '6px 10px',
-                        borderRadius: 'var(--radius-sm)',
-                        backgroundColor: 'var(--status-danger-bg)',
-                        color: 'var(--status-danger)',
+                        borderRadius: 8,
+                        backgroundColor: '#FFF2F2',
+                        color: '#FF3B30',
                         fontSize: 12,
                         fontWeight: 600,
                         border: '1px solid rgba(255, 59, 48, 0.2)',
                         cursor: 'pointer',
+                        transition: 'all 0.15s ease',
                       }}
                     >
                       <Trash2 size={13} />
