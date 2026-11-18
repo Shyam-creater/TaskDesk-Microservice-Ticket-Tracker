@@ -180,13 +180,17 @@ export class TicketService {
   }
 
   async updateTicket(id: string, data: UpdateTicketDTO, user: UserPayload): Promise<ITicket> {
+    if (user.role === 'admin') {
+      throw new ForbiddenError('Administrators cannot edit ticket title or description. Only the user who created the ticket can edit content.');
+    }
+
     const ticket = await this.getTicketById(id, user);
 
-    if (user.role !== 'admin' && ticket.createdBy !== user.id) {
+    if (ticket.createdBy !== user.id) {
       throw new ForbiddenError('You can only update your own tickets');
     }
 
-    if (user.role !== 'admin' && ticket.status !== 'open') {
+    if (ticket.status !== 'open') {
       throw new BadRequestError('Tickets can only be updated while their status is open');
     }
 

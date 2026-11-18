@@ -69,13 +69,24 @@ export const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
   if (!isOpen || !user) return null;
 
   const isOwner = currentTicket.createdBy === user.id;
-  const canEditContent = isOwner && currentTicket.status === 'open';
+  // Admins CANNOT edit ticket title or description - this access is strictly reserved for the ticket creator
+  const canEditContent = !isAdmin && isOwner && currentTicket.status === 'open';
 
   // Available next status transitions for Admin
   const availableStatuses = ALLOWED_TRANSITIONS[currentTicket.status] || [];
 
   // Handle User Edit Content (Title / Description)
   const handleSaveContent = async () => {
+    if (isAdmin) {
+      showToast('Administrators cannot edit ticket content. Only the user can edit title and description.', 'error');
+      return;
+    }
+
+    if (!canEditContent) {
+      showToast('Only the ticket creator can edit content while the ticket is open', 'error');
+      return;
+    }
+
     if (!title.trim() || title.trim().length < 3) {
       showToast('Title must be at least 3 characters', 'error');
       return;
@@ -179,12 +190,27 @@ export const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
               backgroundColor: '#FAFAFC',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 5,
+                  padding: '3px 8px',
+                  borderRadius: 6,
+                  backgroundColor: 'var(--accent-subtle)',
+                  color: 'var(--accent-primary)',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                  letterSpacing: '0.02em',
+                }}
+              >
+                <Tag size={12} />
+                <span>{formatTicketId(currentTicket)}</span>
+              </span>
               <StatusBadge status={currentTicket.status} />
               <PriorityBadge priority={currentTicket.priority} />
-              <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>
-                ID: {currentTicket._id}
-              </span>
             </div>
             <button
               onClick={onClose}
@@ -284,6 +310,23 @@ export const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
                       <Edit2 size={13} />
                       <span>Edit Content</span>
                     </button>
+                  )}
+                  {isAdmin && (
+                    <span
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 4,
+                        fontSize: 11,
+                        color: 'var(--text-tertiary)',
+                        backgroundColor: '#F2F2F7',
+                        padding: '3px 8px',
+                        borderRadius: 4,
+                        fontWeight: 500,
+                      }}
+                    >
+                      User Authored (Read-Only)
+                    </span>
                   )}
                 </div>
 
