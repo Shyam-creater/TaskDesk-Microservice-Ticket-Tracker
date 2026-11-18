@@ -73,7 +73,7 @@ async function seed() {
     { email: 'user@taskdesk.com' },
     {
       $set: {
-        name: 'Alex Johnson',
+        name: 'Shyam',
         email: 'user@taskdesk.com',
         passwordHash: userPasswordHash,
         role: 'user',

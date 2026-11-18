@@ -300,7 +300,7 @@ export const LoginPage: React.FC = () => {
                 color: 'var(--text-primary)',
               }}
             >
-              Demo User
+              Demo User (Shyam)
             </button>
           </div>
         </div>
