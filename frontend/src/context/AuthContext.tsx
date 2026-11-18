@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { apiClient } from '../api/client';
-import { User, UserRole } from '../types';
+import { User } from '../types';
 
 interface AuthContextType {
   user: User | null;
@@ -8,8 +8,8 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isAdmin: boolean;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string, role?: UserRole) => Promise<void>;
+  login: (email: string, password: string) => Promise<User>;
+  register: (name: string, email: string, password: string) => Promise<User>;
   logout: () => void;
 }
 
@@ -51,7 +51,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     checkAuth();
   }, []);
 
-  const login = useCallback(async (email: string, password: string) => {
+  const login = useCallback(async (email: string, password: string): Promise<User> => {
     const response = await apiClient.post('/auth/login', { email, password });
     const { token: receivedToken, user: receivedUser } = response.data.data;
 
@@ -59,17 +59,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(receivedUser);
     localStorage.setItem('taskdesk_token', receivedToken);
     localStorage.setItem('taskdesk_user', JSON.stringify(receivedUser));
+    return receivedUser;
   }, []);
 
   const register = useCallback(
-    async (name: string, email: string, password: string, role: UserRole = 'user') => {
-      const response = await apiClient.post('/auth/register', { name, email, password, role });
+    async (name: string, email: string, password: string): Promise<User> => {
+      const response = await apiClient.post('/auth/register', { name, email, password });
       const { token: receivedToken, user: receivedUser } = response.data.data;
 
       setToken(receivedToken);
       setUser(receivedUser);
       localStorage.setItem('taskdesk_token', receivedToken);
       localStorage.setItem('taskdesk_user', JSON.stringify(receivedUser));
+      return receivedUser;
     },
     []
   );

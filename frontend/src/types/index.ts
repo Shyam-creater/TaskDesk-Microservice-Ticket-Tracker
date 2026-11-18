@@ -8,8 +8,15 @@ export interface User {
   createdAt?: string;
 }
 
-export type TicketStatus = 'open' | 'in_progress' | 'closed';
+export type TicketStatus = 'open' | 'in_review' | 'in_progress' | 'resolved' | 'closed';
 export type TicketPriority = 'low' | 'medium' | 'high';
+
+export interface StatusHistoryItem {
+  from: TicketStatus;
+  to: TicketStatus;
+  changedBy: string;
+  changedAt: string;
+}
 
 export interface Ticket {
   _id: string;
@@ -18,8 +25,29 @@ export interface Ticket {
   status: TicketStatus;
   priority: TicketPriority;
   createdBy: string;
+  reviewedBy?: string;
+  reviewedAt?: string;
+  statusHistory?: StatusHistoryItem[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface Message {
+  _id: string;
+  ticketId: string;
+  senderId: string;
+  senderRole: UserRole;
+  body: string;
+  createdAt: string;
+}
+
+export interface TicketStats {
+  open: number;
+  in_review: number;
+  in_progress: number;
+  resolved: number;
+  closed: number;
+  total: number;
 }
 
 export interface Pagination {

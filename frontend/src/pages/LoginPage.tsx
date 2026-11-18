@@ -25,9 +25,13 @@ export const LoginPage: React.FC = () => {
 
     setSubmitting(true);
     try {
-      await login(email.trim().toLowerCase(), password);
+      const loggedInUser = await login(email.trim().toLowerCase(), password);
       showToast('Logged in successfully', 'success');
-      navigate('/tickets');
+      if (loggedInUser.role === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/tickets');
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Invalid credentials';
       setError(msg);

@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { Ticket as TicketIcon, ArrowRight, User as UserIcon, Lock, Mail, Shield } from 'lucide-react';
-import { UserRole } from '../types';
+import { Ticket as TicketIcon, ArrowRight, User as UserIcon, Lock, Mail, ShieldAlert } from 'lucide-react';
 
 export const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
@@ -13,7 +12,6 @@ export const RegisterPage: React.FC = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<UserRole>('user');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,8 +31,8 @@ export const RegisterPage: React.FC = () => {
 
     setSubmitting(true);
     try {
-      await register(name.trim(), email.trim().toLowerCase(), password, role);
-      showToast('Account created successfully', 'success');
+      await register(name.trim(), email.trim().toLowerCase(), password);
+      showToast('Account created successfully as User', 'success');
       navigate('/tickets');
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Registration failed';
@@ -246,80 +244,24 @@ export const RegisterPage: React.FC = () => {
             </p>
           </div>
 
-          {/* Role Selection */}
-          <div>
-            <label
-              style={{
-                display: 'block',
-                fontSize: 13,
-                fontWeight: 600,
-                color: 'var(--text-primary)',
-                marginBottom: 8,
-              }}
-            >
-              Account Role
-            </label>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-              <label
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 10,
-                  padding: '10px 14px',
-                  borderRadius: 'var(--radius-sm)',
-                  border: `1.5px solid ${role === 'user' ? 'var(--accent-primary)' : 'var(--border-light)'}`,
-                  backgroundColor: role === 'user' ? 'var(--accent-subtle)' : '#FFFFFF',
-                  cursor: 'pointer',
-                  transition: 'all var(--transition-fast)',
-                }}
-              >
-                <input
-                  type="radio"
-                  name="role"
-                  value="user"
-                  checked={role === 'user'}
-                  onChange={() => setRole('user')}
-                  style={{ display: 'none' }}
-                />
-                <UserIcon size={16} color={role === 'user' ? 'var(--accent-primary)' : 'var(--text-tertiary)'} />
-                <div>
-                  <span style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
-                    Standard User
-                  </span>
-                  <span style={{ fontSize: 11, color: 'var(--text-secondary)' }}>View & edit own tickets</span>
-                </div>
-              </label>
-
-              <label
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 10,
-                  padding: '10px 14px',
-                  borderRadius: 'var(--radius-sm)',
-                  border: `1.5px solid ${role === 'admin' ? 'var(--accent-primary)' : 'var(--border-light)'}`,
-                  backgroundColor: role === 'admin' ? 'var(--accent-subtle)' : '#FFFFFF',
-                  cursor: 'pointer',
-                  transition: 'all var(--transition-fast)',
-                }}
-              >
-                <input
-                  type="radio"
-                  name="role"
-                  value="admin"
-                  checked={role === 'admin'}
-                  onChange={() => setRole('admin')}
-                  style={{ display: 'none' }}
-                />
-                <Shield size={16} color={role === 'admin' ? 'var(--accent-primary)' : 'var(--text-tertiary)'} />
-                <div>
-                  <span style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
-                    Administrator
-                  </span>
-                  <span style={{ fontSize: 11, color: 'var(--text-secondary)' }}>View all & delete tickets</span>
-                </div>
-              </label>
-            </div>
+          {/* RBAC notice */}
+          <div
+            style={{
+              padding: '10px 12px',
+              borderRadius: 'var(--radius-sm)',
+              backgroundColor: '#F2F2F7',
+              border: '1px solid var(--border-light)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              fontSize: 12,
+              color: 'var(--text-secondary)',
+            }}
+          >
+            <ShieldAlert size={16} color="var(--accent-primary)" style={{ flexShrink: 0 }} />
+            <span>
+              All new registrations are granted <strong>User</strong> role. Admin accounts are seeded and managed by system administrators.
+            </span>
           </div>
 
           {/* Submit */}

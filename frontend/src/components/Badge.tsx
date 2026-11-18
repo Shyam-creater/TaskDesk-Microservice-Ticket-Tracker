@@ -17,17 +17,29 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
       color: 'var(--status-info)',
       border: 'rgba(0, 113, 227, 0.2)',
     },
+    in_review: {
+      label: 'In Review',
+      bg: 'rgba(88, 86, 214, 0.12)',
+      color: '#5856D6',
+      border: 'rgba(88, 86, 214, 0.25)',
+    },
     in_progress: {
       label: 'In Progress',
       bg: 'var(--status-warning-bg)',
       color: 'var(--status-warning)',
       border: 'rgba(255, 159, 10, 0.2)',
     },
+    resolved: {
+      label: 'Resolved',
+      bg: 'rgba(48, 176, 199, 0.12)',
+      color: '#007D8C',
+      border: 'rgba(48, 176, 199, 0.25)',
+    },
     closed: {
       label: 'Closed',
-      bg: 'var(--status-success-bg)',
-      color: 'var(--status-success)',
-      border: 'rgba(52, 199, 89, 0.2)',
+      bg: 'rgba(142, 142, 147, 0.14)',
+      color: '#636366',
+      border: 'rgba(142, 142, 147, 0.25)',
     },
   };
 
@@ -98,8 +110,6 @@ export const PriorityBadge: React.FC<PriorityBadgeProps> = ({ priority }) => {
         backgroundColor: config.bg,
         color: config.color,
         border: `1px solid ${config.border}`,
-        textTransform: 'uppercase',
-        letterSpacing: '0.04em',
       }}
     >
       {config.label}
