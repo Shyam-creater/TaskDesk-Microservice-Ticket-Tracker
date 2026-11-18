@@ -209,10 +209,10 @@ NODE_ENV=development
 CORS_ORIGIN=*
 
 # MongoDB Atlas
-MONGODB_URI=mongodb+srv://TASKDESK:SMAA5VZfA7rzR9qA@cluster0.rfz95.mongodb.net/TASKDESK?retryWrites=true&w=majority
+MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.rfz95.mongodb.net/TASKDESK?retryWrites=true&w=majority
 
 # JWT Authentication
-JWT_SECRET=supersecret_jwt_signing_key_at_least_32_characters_long_for_security
+JWT_SECRET=your_jwt_secret_key_at_least_32_characters_long
 JWT_EXPIRES_IN=7d
 
 # Frontend Configuration
@@ -230,7 +230,7 @@ VITE_API_URL=http://localhost:4000/api
 
 ### 1. Clone & Setup
 ```bash
-git clone <repository-url>
+git clone https://github.com/Shyam-creater/TaskDesk-Microservice-Ticket-Tracker.git
 cd TaskDesk
 ```
 
