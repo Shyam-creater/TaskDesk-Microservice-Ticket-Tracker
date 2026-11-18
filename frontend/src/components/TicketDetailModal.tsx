@@ -52,6 +52,7 @@ export const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [reviewing, setReviewing] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const modalScrollRef = React.useRef<HTMLDivElement>(null);
 
   // Sync state if prop changes
   React.useEffect(() => {
@@ -59,7 +60,10 @@ export const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
     setTitle(ticket.title);
     setDescription(ticket.description || '');
     setEditingContent(false);
-  }, [ticket]);
+    if (modalScrollRef.current) {
+      modalScrollRef.current.scrollTop = 0;
+    }
+  }, [ticket, isOpen]);
 
   if (!isOpen || !user) return null;
 
@@ -201,6 +205,7 @@ export const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
 
           {/* Modal Content - Two Column Layout */}
           <div
+            ref={modalScrollRef}
             style={{
               display: 'grid',
               gridTemplateColumns: 'minmax(320px, 1fr) minmax(360px, 1.1fr)',

@@ -16,13 +16,15 @@ export const ChatThread: React.FC<ChatThreadProps> = ({ ticket, currentUser }) =
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messageListRef = useRef<HTMLDivElement>(null);
 
   const isClosed = ticket.status === 'closed';
   const isUserBlocked = isClosed && currentUser.role !== 'admin';
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messageListRef.current) {
+      messageListRef.current.scrollTop = messageListRef.current.scrollHeight;
+    }
   };
 
   const fetchMessages = useCallback(async (silent = false) => {
@@ -153,6 +155,7 @@ export const ChatThread: React.FC<ChatThreadProps> = ({ ticket, currentUser }) =
 
       {/* Message List */}
       <div
+        ref={messageListRef}
         style={{
           flex: 1,
           overflowY: 'auto',
@@ -262,7 +265,6 @@ export const ChatThread: React.FC<ChatThreadProps> = ({ ticket, currentUser }) =
             );
           })
         )}
-        <div ref={messagesEndRef} />
       </div>
 
       {/* Input or Closed Notice */}

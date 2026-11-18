@@ -3,6 +3,7 @@ import { Modal } from './Modal';
 import { apiClient } from '../api/client';
 import { useToast } from '../context/ToastContext';
 import { TicketPriority } from '../types';
+import { ChevronDown } from 'lucide-react';
 
 interface CreateTicketModalProps {
   isOpen: boolean;
@@ -133,24 +134,40 @@ export const CreateTicketModal: React.FC<CreateTicketModalProps> = ({
           >
             Priority
           </label>
-          <select
-            id="ticket-priority"
-            value={priority}
-            onChange={(e) => setPriority(e.target.value as TicketPriority)}
-            style={{
-              width: '100%',
-              height: 44,
-              padding: '0 14px',
-              borderRadius: 'var(--radius-sm)',
-              border: '1px solid var(--border-color)',
-              backgroundColor: '#FFFFFF',
-              color: 'var(--text-primary)',
-            }}
-          >
-            <option value="low">Low Priority</option>
-            <option value="medium">Medium Priority</option>
-            <option value="high">High Priority</option>
-          </select>
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+            <select
+              id="ticket-priority"
+              value={priority}
+              onChange={(e) => setPriority(e.target.value as TicketPriority)}
+              style={{
+                width: '100%',
+                height: 44,
+                padding: '0 36px 0 14px',
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--border-color)',
+                backgroundColor: '#FFFFFF',
+                color: 'var(--text-primary)',
+                fontSize: 14,
+                appearance: 'none',
+                WebkitAppearance: 'none',
+                MozAppearance: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              <option value="low">Low Priority</option>
+              <option value="medium">Medium Priority</option>
+              <option value="high">High Priority</option>
+            </select>
+            <ChevronDown
+              size={16}
+              color="var(--text-secondary)"
+              style={{
+                position: 'absolute',
+                right: 14,
+                pointerEvents: 'none',
+              }}
+            />
+          </div>
         </div>
 
         {/* Description Input */}

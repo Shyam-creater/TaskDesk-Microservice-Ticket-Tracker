@@ -22,6 +22,7 @@ import {
   Archive,
   Layers,
   MessageSquare,
+  ChevronDown,
 } from 'lucide-react';
 
 export const AdminPage: React.FC = () => {
@@ -33,7 +34,7 @@ export const AdminPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | TicketStatus>('all');
   const [priorityFilter, setPriorityFilter] = useState<'all' | TicketPriority>('all');
-  const [viewMode, setViewMode] = useState<ViewMode>('table');
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [ticketToDelete, setTicketToDelete] = useState<Ticket | null>(null);
 
@@ -326,48 +327,80 @@ export const AdminPage: React.FC = () => {
             </div>
 
             {/* Status Dropdown */}
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as 'all' | TicketStatus)}
-              style={{
-                height: 40,
-                padding: '0 14px',
-                borderRadius: 'var(--radius-sm)',
-                border: '1px solid var(--border-color)',
-                backgroundColor: '#FFFFFF',
-                color: 'var(--text-primary)',
-                fontSize: 13,
-                fontWeight: 500,
-              }}
-            >
-              <option value="all">All Statuses</option>
-              <option value="open">Open</option>
-              <option value="in_review">In Review</option>
-              <option value="in_progress">In Progress</option>
-              <option value="resolved">Resolved</option>
-              <option value="closed">Closed</option>
-            </select>
+            <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as 'all' | TicketStatus)}
+                style={{
+                  height: 40,
+                  padding: '0 34px 0 14px',
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px solid var(--border-color)',
+                  backgroundColor: '#FFFFFF',
+                  color: 'var(--text-primary)',
+                  fontSize: 13,
+                  fontWeight: 500,
+                  appearance: 'none',
+                  WebkitAppearance: 'none',
+                  MozAppearance: 'none',
+                  cursor: 'pointer',
+                  boxShadow: '0 1px 2px rgba(0, 0, 0, 0.04)',
+                }}
+              >
+                <option value="all">All Statuses</option>
+                <option value="open">Open</option>
+                <option value="in_review">In Review</option>
+                <option value="in_progress">In Progress</option>
+                <option value="resolved">Resolved</option>
+                <option value="closed">Closed</option>
+              </select>
+              <ChevronDown
+                size={14}
+                color="var(--text-secondary)"
+                style={{
+                  position: 'absolute',
+                  right: 12,
+                  pointerEvents: 'none',
+                }}
+              />
+            </div>
 
             {/* Priority Dropdown */}
-            <select
-              value={priorityFilter}
-              onChange={(e) => setPriorityFilter(e.target.value as 'all' | TicketPriority)}
-              style={{
-                height: 40,
-                padding: '0 14px',
-                borderRadius: 'var(--radius-sm)',
-                border: '1px solid var(--border-color)',
-                backgroundColor: '#FFFFFF',
-                color: 'var(--text-primary)',
-                fontSize: 13,
-                fontWeight: 500,
-              }}
-            >
-              <option value="all">All Priorities</option>
-              <option value="high">High Priority</option>
-              <option value="medium">Medium Priority</option>
-              <option value="low">Low Priority</option>
-            </select>
+            <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+              <select
+                value={priorityFilter}
+                onChange={(e) => setPriorityFilter(e.target.value as 'all' | TicketPriority)}
+                style={{
+                  height: 40,
+                  padding: '0 34px 0 14px',
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px solid var(--border-color)',
+                  backgroundColor: '#FFFFFF',
+                  color: 'var(--text-primary)',
+                  fontSize: 13,
+                  fontWeight: 500,
+                  appearance: 'none',
+                  WebkitAppearance: 'none',
+                  MozAppearance: 'none',
+                  cursor: 'pointer',
+                  boxShadow: '0 1px 2px rgba(0, 0, 0, 0.04)',
+                }}
+              >
+                <option value="all">All Priorities</option>
+                <option value="high">High Priority</option>
+                <option value="medium">Medium Priority</option>
+                <option value="low">Low Priority</option>
+              </select>
+              <ChevronDown
+                size={14}
+                color="var(--text-secondary)"
+                style={{
+                  position: 'absolute',
+                  right: 12,
+                  pointerEvents: 'none',
+                }}
+              />
+            </div>
           </div>
 
           {/* Right: Table vs Grid Format Switcher */}
