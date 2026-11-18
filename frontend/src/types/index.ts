@@ -78,6 +78,27 @@ export interface ApiErrorResponse {
   correlationId?: string;
 }
 
+export type NotificationType =
+  | 'ticket_created'
+  | 'status_updated'
+  | 'priority_updated'
+  | 'ticket_reviewed'
+  | 'message_received';
+
+export interface Notification {
+  _id: string;
+  recipientId?: string;
+  recipientRole?: 'user' | 'admin';
+  ticketId?: string;
+  customId?: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  read: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export const formatTicketId = (ticket: { customId?: string; _id?: string }): string => {
   if (ticket.customId && ticket.customId.trim()) return ticket.customId;
   if (ticket._id) return `TD-${ticket._id.slice(-4).toUpperCase()}`;

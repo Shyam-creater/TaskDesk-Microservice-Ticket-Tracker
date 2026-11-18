@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { apiClient } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -23,6 +24,36 @@ export const TicketsPage: React.FC = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const ticketParam = searchParams.get('ticket');
+
+  useEffect(() => {
+    if (ticketParam) {
+      const found = tickets.find(
+        (t) => t._id === ticketParam || t.customId?.toUpperCase() === ticketParam.toUpperCase()
+      );
+      if (found) {
+        setSelectedTicket(found);
+      } else {
+        apiClient
+          .get(`/tickets/${ticketParam}`)
+          .then((res) => {
+            if (res.data?.data?.ticket) {
+              setSelectedTicket(res.data.data.ticket);
+            }
+          })
+          .catch(() => {});
+      }
+    }
+  }, [ticketParam, tickets]);
+
+  const handleCloseDetail = () => {
+    setSelectedTicket(null);
+    if (ticketParam) {
+      searchParams.delete('ticket');
+      setSearchParams(searchParams, { replace: true });
+    }
+  };
 
   const fetchTickets = useCallback(async () => {
     if (!hasLoadedRef.current) {
@@ -693,7 +724,7 @@ export const TicketsPage: React.FC = () => {
         <TicketDetailModal
           ticket={selectedTicket}
           isOpen={!!selectedTicket}
-          onClose={() => setSelectedTicket(null)}
+          onClose={handleCloseDetail}
           onTicketUpdated={handleTicketUpdated}
           onTicketDeleted={handleTicketDeleted}
         />

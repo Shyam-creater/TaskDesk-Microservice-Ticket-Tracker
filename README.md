@@ -17,13 +17,13 @@ flowchart LR
     subgraph Server ["Backend (Port 4000)"]
         direction TB
         APP["Express MVC API (/api)\nHelmet | CORS | Rate Limiting | JWT Auth"]
-        CTRL["Controllers (Auth & Ticket)\nBusiness Logic & Permissions"]
-        MODELS["Mongoose Models\nUser | Ticket | Message | Counter"]
+        CTRL["Controllers (Auth, Ticket, Notification)\nBusiness Logic & Permissions"]
+        MODELS["Mongoose Models\nUser | Ticket | Message | Notification | Counter"]
         APP --> CTRL --> MODELS
     end
 
     subgraph Database ["MongoDB Atlas"]
-        ATLAS[("TASKDESK Cluster\nusers | tickets | messages | counters")]
+        ATLAS[("TASKDESK Cluster\nusers | tickets | messages | notifications | counters")]
     end
 
     UI <-->|HTTP / REST + Bearer JWT| APP
@@ -112,6 +112,7 @@ TaskDesk/
 │   │   │   └── db.ts                 # MongoDB Atlas connection (process.env.MONGODB_URI)
 │   │   ├── controllers/
 │   │   │   ├── auth.controller.ts    # Authentication & User management logic
+│   │   │   ├── notification.controller.ts # Notification fetch, read, & broadcast logic
 │   │   │   └── ticket.controller.ts  # Ticket CRUD, status, review, and chat logic
 │   │   ├── middleware/
 │   │   │   ├── auth.middleware.ts    # JWT verification & requireRole('admin')
@@ -120,10 +121,12 @@ TaskDesk/
 │   │   ├── models/
 │   │   │   ├── counter.model.ts      # Atomic sequence counter for TD-XXXX
 │   │   │   ├── message.model.ts      # Real-time ticket chat messages
+│   │   │   ├── notification.model.ts # Role-based & user notifications schema
 │   │   │   ├── ticket.model.ts       # Support ticket model & status history
 │   │   │   └── user.model.ts         # User model with passwordHash & role
 │   │   ├── routes/
 │   │   │   ├── auth.routes.ts        # /api/auth route mappings
+│   │   │   ├── notification.routes.ts # /api/notifications route mappings
 │   │   │   ├── ticket.routes.ts      # /api/tickets route mappings
 │   │   │   └── index.ts              # Combined /api router
 │   │   ├── app.ts                    # Express app configuration & middleware
@@ -142,6 +145,7 @@ TaskDesk/
     │   │   ├── CreateTicketModal.tsx # New ticket submission modal (User only)
     │   │   ├── DeleteConfirmModal.tsx# Ticket deletion confirmation modal (Admin only)
     │   │   ├── Navbar.tsx            # Navigation bar with role badge & logout
+    │   │   ├── NotificationBell.tsx  # Apple-style notification bell with live popover
     │   │   ├── ProtectedRoute.tsx    # Route guard with authentication & role checks
     │   │   ├── SegmentedControl.tsx  # Apple-style segmented filter tabs
     │   │   ├── Skeleton.tsx          # Pulse placeholder skeletons for initial load
@@ -181,6 +185,12 @@ TaskDesk/
   - Tickets smoothly dim (`opacity: 0.55`) while an animated accent loading bar glides across the top edge with a floating `"Updating..."` pill badge.
   - Skeletons are reserved strictly for the very first page visit, completely eliminating layout flashing.
 - **Real-Time Support Chat**: Integrated directly inside the ticket detail modal with 5-second polling, role-colored chat bubbles, and auto-scrolling to the latest message.
+- **Apple-Inspired Notification Bell**:
+  - Located in the global Navbar with dynamic unread count badge.
+  - Glassmorphic dropdown popover (`backdropFilter: 'blur(25px)'`) with custom icons per event type (`ticket_created`, `status_updated`, `ticket_reviewed`, `message_received`).
+  - Auto-polling every 10 seconds for real-time updates.
+  - "Mark all as read" one-click action, individual notification dismissal, and unread blue indicators.
+  - Deep linking: clicking any notification directly opens the associated ticket modal seamlessly.
 
 ---
 
@@ -291,6 +301,15 @@ All backend API routes are prefixed with `/api`.
 | `DELETE` | `/api/tickets/:id` | Bearer JWT (Admin) | Permanently delete ticket and associated messages |
 | `GET` | `/api/tickets/:id/messages`| Bearer JWT | Fetch chat thread messages for ticket |
 | `POST` | `/api/tickets/:id/messages`| Bearer JWT | Send a message in the ticket thread |
+
+### Notification Endpoints (`/api/notifications`)
+
+| Method | Endpoint | Auth | Description |
+|---|---|:---:|---|
+| `GET` | `/api/notifications` | Bearer JWT | Fetch user notifications (admin receives broadcast admin notifications) + unread count |
+| `PATCH` | `/api/notifications/read-all` | Bearer JWT | Mark all notifications for the user as read |
+| `PATCH` | `/api/notifications/:id/read` | Bearer JWT | Mark a specific notification as read |
+| `DELETE` | `/api/notifications/:id` | Bearer JWT | Delete a specific notification |
 
 ---
 

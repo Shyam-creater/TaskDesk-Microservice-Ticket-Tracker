@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { apiClient } from '../api/client';
 import { useToast } from '../context/ToastContext';
 import { Ticket, TicketStatus, TicketPriority, TicketStats, formatTicketId } from '../types';
@@ -39,6 +40,36 @@ export const AdminPage: React.FC = () => {
   const [priorityFilter, setPriorityFilter] = useState<'all' | TicketPriority>('all');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const ticketParam = searchParams.get('ticket');
+
+  useEffect(() => {
+    if (ticketParam) {
+      const found = tickets.find(
+        (t) => t._id === ticketParam || t.customId?.toUpperCase() === ticketParam.toUpperCase()
+      );
+      if (found) {
+        setSelectedTicket(found);
+      } else {
+        apiClient
+          .get(`/tickets/${ticketParam}`)
+          .then((res) => {
+            if (res.data?.data?.ticket) {
+              setSelectedTicket(res.data.data.ticket);
+            }
+          })
+          .catch(() => {});
+      }
+    }
+  }, [ticketParam, tickets]);
+
+  const handleCloseDetail = () => {
+    setSelectedTicket(null);
+    if (ticketParam) {
+      searchParams.delete('ticket');
+      setSearchParams(searchParams, { replace: true });
+    }
+  };
   const [ticketToDelete, setTicketToDelete] = useState<Ticket | null>(null);
   const [usersMap, setUsersMap] = useState<Record<string, { name: string; email: string }>>({});
 
@@ -1047,7 +1078,7 @@ export const AdminPage: React.FC = () => {
         <TicketDetailModal
           ticket={selectedTicket}
           isOpen={!!selectedTicket}
-          onClose={() => setSelectedTicket(null)}
+          onClose={handleCloseDetail}
           onTicketUpdated={handleTicketUpdated}
           onTicketDeleted={handleTicketDeleted}
         />

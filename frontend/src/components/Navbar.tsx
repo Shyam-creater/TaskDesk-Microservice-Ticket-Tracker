@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Ticket as TicketIcon, ShieldCheck, LogOut, CheckCircle } from 'lucide-react';
+import { NotificationBell } from './NotificationBell';
 
 export const Navbar: React.FC = () => {
   const { user, isAdmin, logout } = useAuth();
@@ -110,6 +111,8 @@ export const Navbar: React.FC = () => {
 
         {/* Right: User Profile & Logout */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <NotificationBell />
+
           <div
             style={{
               display: 'flex',

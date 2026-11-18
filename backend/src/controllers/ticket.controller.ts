@@ -4,6 +4,7 @@ import { Ticket, ITicket, TicketStatus, TicketPriority } from '../models/ticket.
 import { Message } from '../models/message.model.js';
 import { Counter } from '../models/counter.model.js';
 import { User } from '../models/user.model.js';
+import { NotificationController } from './notification.controller.js';
 import { AuthenticatedRequest } from '../middleware/auth.middleware.js';
 import { NotFoundError, ForbiddenError, BadRequestError } from '../middleware/error.middleware.js';
 
@@ -112,6 +113,18 @@ export class TicketController {
       });
 
       await ticket.save();
+
+      // Dispatch notification to Administrators
+      await NotificationController.createNotification({
+        recipientId: 'admin',
+        recipientRole: 'admin',
+        ticketId: ticket._id,
+        customId: ticket.customId,
+        type: 'ticket_created',
+        title: `New Ticket: ${ticket.customId}`,
+        message: `${user.name || user.email} opened: "${ticket.title}"`,
+      });
+
       res.status(201).json({
         data: { ticket },
       });
@@ -331,6 +344,16 @@ export class TicketController {
       await ticket.save();
       await this.enrichTickets([ticket]);
 
+      // Dispatch notification to Ticket Creator
+      await NotificationController.createNotification({
+        recipientId: ticket.createdBy,
+        ticketId: ticket._id,
+        customId: ticket.customId,
+        type: 'status_updated',
+        title: `Ticket ${ticket.customId} Updated`,
+        message: `Status changed to ${nextStatus.replace('_', ' ').toUpperCase()} by Support`,
+      });
+
       res.status(200).json({
         data: { ticket },
       });
@@ -379,6 +402,16 @@ export class TicketController {
 
       await ticket.save();
       await this.enrichTickets([ticket]);
+
+      // Dispatch notification to Ticket Creator
+      await NotificationController.createNotification({
+        recipientId: ticket.createdBy,
+        ticketId: ticket._id,
+        customId: ticket.customId,
+        type: 'ticket_reviewed',
+        title: `Ticket ${ticket.customId} Reviewed`,
+        message: `Your ticket has been reviewed by the Support Team`,
+      });
 
       res.status(200).json({
         data: { ticket },
@@ -493,6 +526,27 @@ export class TicketController {
       });
 
       await message.save();
+
+      // Dispatch notification for chat message
+      if (user.role === 'admin') {
+        await NotificationController.createNotification({
+          recipientId: ticket.createdBy,
+          ticketId: ticket._id,
+          customId: ticket.customId,
+          type: 'message_received',
+          title: `New Reply on ${ticket.customId}`,
+          message: `Support replied: "${body.trim().slice(0, 60)}${body.trim().length > 60 ? '...' : ''}"`,
+        });
+      } else {
+        await NotificationController.createNotification({
+          recipientRole: 'admin',
+          ticketId: ticket._id,
+          customId: ticket.customId,
+          type: 'message_received',
+          title: `New Message on ${ticket.customId}`,
+          message: `${user.name || 'User'} sent a message on ${ticket.customId}`,
+        });
+      }
 
       res.status(201).json({
         data: { message },
