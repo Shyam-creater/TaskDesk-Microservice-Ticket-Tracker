@@ -1,0 +1,25 @@
+{
+  "name": "taskdesk-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "TaskDesk - Microservice Ticket Tracker",
+  "scripts": {
+    "dev:auth": "cd services/auth-service && npm run dev",
+    "dev:ticket": "cd services/ticket-service && npm run dev",
+    "dev:gateway": "cd services/api-gateway && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "seed": "cd services/auth-service && npx tsx ../../scripts/seed.ts",
+    "test:auth": "cd services/auth-service && npm test",
+    "test:ticket": "cd services/ticket-service && npm test",
+    "test:gateway": "cd services/api-gateway && npm test",
+    "test": "npm run test:auth && npm run test:ticket && npm run test:gateway",
+    "build:auth": "cd services/auth-service && npm run build",
+    "build:ticket": "cd services/ticket-service && npm run build",
+    "build:gateway": "cd services/api-gateway && npm run build",
+    "build:frontend": "cd frontend && npm run build",
+    "build": "npm run build:auth && npm run build:ticket && npm run build:gateway && npm run build:frontend"
+  },
+  "keywords": ["microservices", "taskdesk", "typescript", "mongodb", "react"],
+  "author": "TaskDesk Team",
+  "license": "MIT"
+}

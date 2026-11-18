@@ -1,0 +1,181 @@
+version: '3.8'
+
+services:
+  # ----------------------------------------------------------------------------
+  # MongoDB - One shared database instance hosting isolated service databases:
+  #   - auth_db (owned by auth-service)
+  #   - ticket_db (owned by ticket-service)
+  # ----------------------------------------------------------------------------
+  mongo:
+    image: mongo:7-jammy
+    container_name: taskdesk-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - taskdesk-network
+
+  # ----------------------------------------------------------------------------
+  # Distributed Tracing - Jaeger (OTLP HTTP collector & Web UI)
+  # ----------------------------------------------------------------------------
+  jaeger:
+    image: jaegertracing/all-in-one:1.53
+    container_name: taskdesk-jaeger
+    restart: unless-stopped
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    ports:
+      - "16686:16686" # Web UI
+      - "4318:4318"   # OTLP HTTP receiver
+    networks:
+      - taskdesk-network
+
+  # ----------------------------------------------------------------------------
+  # Metrics Aggregation - Prometheus
+  # ----------------------------------------------------------------------------
+  prometheus:
+    image: prom/prometheus:v2.50.1
+    container_name: taskdesk-prometheus
+    restart: unless-stopped
+    volumes:
+      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    networks:
+      - taskdesk-network
+
+  # ----------------------------------------------------------------------------
+  # Microservice 1: Auth Service (Port 4001)
+  # ----------------------------------------------------------------------------
+  auth-service:
+    build:
+      context: ./services/auth-service
+      dockerfile: Dockerfile
+    container_name: taskdesk-auth-service
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=4001
+      - MONGO_URI=mongodb://mongo:27017/auth_db
+      - JWT_SECRET=${JWT_SECRET:-supersecret_jwt_signing_key_at_least_32_characters_long_for_security}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-1h}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318/v1/traces
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - CORS_ORIGIN=*
+    ports:
+      - "4001:4001"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      jaeger:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:4001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - taskdesk-network
+
+  # ----------------------------------------------------------------------------
+  # Microservice 2: Ticket Service (Port 4002)
+  # ----------------------------------------------------------------------------
+  ticket-service:
+    build:
+      context: ./services/ticket-service
+      dockerfile: Dockerfile
+    container_name: taskdesk-ticket-service
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=4002
+      - MONGO_URI=mongodb://mongo:27017/ticket_db
+      - JWT_SECRET=${JWT_SECRET:-supersecret_jwt_signing_key_at_least_32_characters_long_for_security}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318/v1/traces
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - CORS_ORIGIN=*
+    ports:
+      - "4002:4002"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      jaeger:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:4002/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - taskdesk-network
+
+  # ----------------------------------------------------------------------------
+  # API Gateway (Port 4000)
+  # ----------------------------------------------------------------------------
+  api-gateway:
+    build:
+      context: ./services/api-gateway
+      dockerfile: Dockerfile
+    container_name: taskdesk-api-gateway
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=4000
+      - JWT_SECRET=${JWT_SECRET:-supersecret_jwt_signing_key_at_least_32_characters_long_for_security}
+      - AUTH_SERVICE_URL=http://auth-service:4001
+      - TICKET_SERVICE_URL=http://ticket-service:4002
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318/v1/traces
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - CORS_ORIGIN=*
+    ports:
+      - "4000:4000"
+    depends_on:
+      auth-service:
+        condition: service_healthy
+      ticket-service:
+        condition: service_healthy
+      jaeger:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:4000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - taskdesk-network
+
+  # ----------------------------------------------------------------------------
+  # Frontend React SPA (Port 5173 mapped to Nginx 80)
+  # ----------------------------------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: taskdesk-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    depends_on:
+      api-gateway:
+        condition: service_healthy
+    networks:
+      - taskdesk-network
+
+networks:
+  taskdesk-network:
+    driver: bridge
+
+volumes:
+  mongo-data:
+    driver: local
