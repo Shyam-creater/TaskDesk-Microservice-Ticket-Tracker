@@ -38,6 +38,14 @@ export class TicketService {
   }
 
   private async enrichTickets(tickets: ITicket[]): Promise<ITicket[]> {
+    for (const t of tickets) {
+      if (!t.customId) {
+        const fallback = `TD-${t._id.toString().slice(-4).toUpperCase()}`;
+        t.set('customId', fallback);
+        t.customId = fallback;
+      }
+    }
+
     const missing = tickets.filter((t) => !t.createdByName);
     if (missing.length === 0) return tickets;
 

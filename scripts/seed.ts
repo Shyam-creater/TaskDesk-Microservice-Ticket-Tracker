@@ -32,11 +32,14 @@ const userSchema = new mongoose.Schema(
 // Minimal Ticket Schema for seeding
 const ticketSchema = new mongoose.Schema(
   {
+    customId: { type: String, unique: true, sparse: true },
     title: { type: String, required: true },
     description: { type: String, default: '' },
     status: { type: String, enum: ['open', 'in_progress', 'closed'], default: 'open' },
     priority: { type: String, enum: ['low', 'medium', 'high'], default: 'medium' },
     createdBy: { type: String, required: true },
+    createdByName: { type: String, default: 'Shyam' },
+    createdByEmail: { type: String, default: 'user@taskdesk.com' },
   },
   { timestamps: true }
 );
@@ -91,32 +94,44 @@ async function seed() {
   // Seed sample tickets for Demo User
   const sampleTickets = [
     {
+      customId: 'TD-1001',
       title: 'High latency observed on read replica pool',
       description: 'P99 response times spiked to 850ms during peak load on the secondary replica.',
       priority: 'high',
       status: 'in_progress',
       createdBy: demoUser._id.toString(),
+      createdByName: 'Shyam',
+      createdByEmail: 'user@taskdesk.com',
     },
     {
+      customId: 'TD-1002',
       title: 'Update API Gateway CORS origins for staging',
       description: 'Allow new test subdomain staging.taskdesk.internal to access API routes.',
       priority: 'medium',
       status: 'open',
       createdBy: demoUser._id.toString(),
+      createdByName: 'Shyam',
+      createdByEmail: 'user@taskdesk.com',
     },
     {
+      customId: 'TD-1003',
       title: 'Audit log exporter timestamp drift fixed',
       description: 'Resolved NTP sync drift on the OpenTelemetry collector container.',
       priority: 'low',
       status: 'closed',
       createdBy: demoUser._id.toString(),
+      createdByName: 'Shyam',
+      createdByEmail: 'user@taskdesk.com',
     },
     {
+      customId: 'TD-1004',
       title: 'Configure Prometheus alerting rules for 5xx spikes',
       description: 'Establish alert manager rule to notify channel if 5xx rate exceeds 1% over 5m.',
       priority: 'high',
       status: 'open',
       createdBy: admin._id.toString(),
+      createdByName: 'System Administrator',
+      createdByEmail: 'admin@taskdesk.com',
     },
   ];
 

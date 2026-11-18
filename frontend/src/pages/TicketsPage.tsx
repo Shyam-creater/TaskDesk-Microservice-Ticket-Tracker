@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { apiClient } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { Ticket, TicketStatus } from '../types';
+import { Ticket, TicketStatus, formatTicketId } from '../types';
 import { Navbar } from '../components/Navbar';
 import { StatusBadge, PriorityBadge } from '../components/Badge';
 import { SegmentedControl, SegmentOption } from '../components/SegmentedControl';
@@ -10,7 +10,7 @@ import { CreateTicketModal } from '../components/CreateTicketModal';
 import { TicketDetailModal } from '../components/TicketDetailModal';
 import { ViewToggle, ViewMode } from '../components/ViewToggle';
 import { Skeleton } from '../components/Skeleton';
-import { Plus, Ticket as TicketIcon, Calendar, MessageSquare, ChevronRight } from 'lucide-react';
+import { Plus, Ticket as TicketIcon, Calendar, MessageSquare, ChevronRight, Tag } from 'lucide-react';
 
 export const TicketsPage: React.FC = () => {
   const { isAdmin } = useAuth();
@@ -262,6 +262,9 @@ export const TicketsPage: React.FC = () => {
                       backgroundColor: '#FBFBFD',
                     }}
                   >
+                    <th style={{ padding: '14px 16px', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                      Ticket ID
+                    </th>
                     <th style={{ padding: '14px 20px', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                       Ticket Details
                     </th>
@@ -299,6 +302,28 @@ export const TicketsPage: React.FC = () => {
                         onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#FBFBFD')}
                         onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
                       >
+                        {/* Custom Ticket ID */}
+                        <td style={{ padding: '16px 16px', whiteSpace: 'nowrap' }}>
+                          <span
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 5,
+                              padding: '3px 8px',
+                              borderRadius: 4,
+                              backgroundColor: 'var(--accent-subtle)',
+                              color: 'var(--accent-primary)',
+                              fontSize: 12,
+                              fontWeight: 700,
+                              fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                              letterSpacing: '0.02em',
+                            }}
+                          >
+                            <Tag size={12} />
+                            <span>{formatTicketId(ticket)}</span>
+                          </span>
+                        </td>
+
                         <td style={{ padding: '16px 20px', maxWidth: 380 }}>
                           <span
                             style={{
@@ -426,7 +451,24 @@ export const TicketsPage: React.FC = () => {
                         marginBottom: 12,
                       }}
                     >
-                      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                      <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                        <span
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 4,
+                            padding: '2px 8px',
+                            borderRadius: 4,
+                            backgroundColor: 'var(--accent-subtle)',
+                            color: 'var(--accent-primary)',
+                            fontSize: 12,
+                            fontWeight: 700,
+                            fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                          }}
+                        >
+                          <Tag size={11} />
+                          <span>{formatTicketId(ticket)}</span>
+                        </span>
                         <StatusBadge status={ticket.status} />
                         <PriorityBadge priority={ticket.priority} />
                       </div>

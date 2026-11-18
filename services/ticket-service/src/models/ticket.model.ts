@@ -12,6 +12,7 @@ export interface IStatusHistoryItem {
 
 export interface ITicket extends Document {
   _id: mongoose.Types.ObjectId;
+  customId?: string;
   title: string;
   description: string;
   status: TicketStatus;
@@ -52,6 +53,13 @@ const StatusHistorySchema = new Schema<IStatusHistoryItem>(
 
 const TicketSchema = new Schema<ITicket>(
   {
+    customId: {
+      type: String,
+      unique: true,
+      sparse: true,
+      index: true,
+      trim: true,
+    },
     title: {
       type: String,
       required: true,

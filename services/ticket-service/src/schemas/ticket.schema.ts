@@ -82,7 +82,7 @@ export const ticketQuerySchema = z
 
 export const ticketIdParamSchema = z
   .object({
-    id: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid ticket ID format'),
+    id: z.string().regex(/^([0-9a-fA-F]{24}|[A-Za-z0-9_-]+)$/, 'Invalid ticket ID format'),
   })
   .strict();
 

@@ -1,4 +1,6 @@
+import mongoose from 'mongoose';
 import { Ticket, ITicket, TicketStatus, TicketPriority } from '../models/ticket.model';
+import { Counter } from '../models/counter.model';
 
 export interface CreateTicketData {
   title: string;
@@ -7,6 +9,7 @@ export interface CreateTicketData {
   createdBy: string;
   createdByName?: string;
   createdByEmail?: string;
+  customId?: string;
 }
 
 export interface TicketFilterQuery {
@@ -30,8 +33,46 @@ export interface TicketStatsResult {
 }
 
 export class TicketRepository {
+  async getNextCustomId(): Promise<string> {
+    try {
+      const existingCounter = await Counter.findById('ticket_seq');
+      if (!existingCounter) {
+        const tickets = await Ticket.find({ customId: { $regex: /^TD-\d+$/ } })
+          .select('customId')
+          .exec();
+        let maxNum = 1000;
+        for (const t of tickets) {
+          if (t.customId) {
+            const match = t.customId.match(/^TD-(\d+)$/);
+            if (match) {
+              const n = parseInt(match[1], 10);
+              if (n > maxNum) maxNum = n;
+            }
+          }
+        }
+        await Counter.findByIdAndUpdate(
+          'ticket_seq',
+          { $setOnInsert: { seq: maxNum } },
+          { upsert: true }
+        );
+      }
+
+      const counter = await Counter.findByIdAndUpdate(
+        'ticket_seq',
+        { $inc: { seq: 1 } },
+        { new: true, upsert: true }
+      );
+      return `TD-${counter.seq}`;
+    } catch {
+      // Fallback timestamp-based identifier if counter collection unavailable
+      return `TD-${Date.now().toString().slice(-4)}`;
+    }
+  }
+
   async create(data: CreateTicketData): Promise<ITicket> {
+    const customId = data.customId || (await this.getNextCustomId());
     const ticket = new Ticket({
+      customId,
       title: data.title,
       description: data.description || '',
       priority: data.priority || 'medium',
@@ -45,7 +86,11 @@ export class TicketRepository {
   }
 
   async findById(id: string): Promise<ITicket | null> {
-    return await Ticket.findById(id);
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      const byObjId = await Ticket.findById(id);
+      if (byObjId) return byObjId;
+    }
+    return await Ticket.findOne({ customId: id.toUpperCase() });
   }
 
   async findWithFilter(
@@ -94,15 +139,24 @@ export class TicketRepository {
       updateOps.$set = setFields;
     }
 
-    return await Ticket.findByIdAndUpdate(
-      id,
+    let filter: Record<string, unknown> = { _id: id };
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      filter = { customId: id.toUpperCase() };
+    }
+
+    return await Ticket.findOneAndUpdate(
+      filter,
       updateOps,
       { new: true, runValidators: true }
     );
   }
 
   async deleteById(id: string): Promise<ITicket | null> {
-    return await Ticket.findByIdAndDelete(id);
+    let filter: Record<string, unknown> = { _id: id };
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      filter = { customId: id.toUpperCase() };
+    }
+    return await Ticket.findOneAndDelete(filter);
   }
 
   async getStatusStats(): Promise<TicketStatsResult> {

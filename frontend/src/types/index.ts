@@ -20,6 +20,7 @@ export interface StatusHistoryItem {
 
 export interface Ticket {
   _id: string;
+  customId?: string;
   title: string;
   description: string;
   status: TicketStatus;
@@ -76,3 +77,9 @@ export interface ApiErrorResponse {
   };
   correlationId?: string;
 }
+
+export const formatTicketId = (ticket: { customId?: string; _id?: string }): string => {
+  if (ticket.customId && ticket.customId.trim()) return ticket.customId;
+  if (ticket._id) return `TD-${ticket._id.slice(-4).toUpperCase()}`;
+  return 'TD-0000';
+};

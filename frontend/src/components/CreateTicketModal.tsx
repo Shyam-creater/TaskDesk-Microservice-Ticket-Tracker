@@ -40,13 +40,15 @@ export const CreateTicketModal: React.FC<CreateTicketModalProps> = ({
 
     setSubmitting(true);
     try {
-      await apiClient.post('/tickets', {
+      const response = await apiClient.post('/tickets', {
         title: title.trim(),
         description: description.trim(),
         priority,
       });
 
-      showToast('Ticket created successfully', 'success');
+      const newTicket = response.data?.data?.ticket;
+      const displayId = newTicket?.customId || 'Ticket';
+      showToast(`${displayId} created successfully`, 'success');
       setTitle('');
       setDescription('');
       setPriority('medium');

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { apiClient } from '../api/client';
 import { useToast } from '../context/ToastContext';
-import { Ticket, TicketStatus, TicketPriority, TicketStats } from '../types';
+import { Ticket, TicketStatus, TicketPriority, TicketStats, formatTicketId } from '../types';
 import { Navbar } from '../components/Navbar';
 import { StatusBadge, PriorityBadge } from '../components/Badge';
 import { TicketDetailModal } from '../components/TicketDetailModal';
@@ -23,6 +23,7 @@ import {
   Layers,
   MessageSquare,
   ChevronDown,
+  Tag,
 } from 'lucide-react';
 
 export const AdminPage: React.FC = () => {
@@ -134,9 +135,11 @@ export const AdminPage: React.FC = () => {
 
   const filteredTickets = tickets.filter((t) => {
     const q = search.toLowerCase();
+    const customId = (t.customId || '').toLowerCase();
     const userName = getUserDisplayName(t).toLowerCase();
     const userEmail = getUserDisplayEmail(t).toLowerCase();
     return (
+      customId.includes(q) ||
       t.title.toLowerCase().includes(q) ||
       (t.description && t.description.toLowerCase().includes(q)) ||
       t.createdBy.toLowerCase().includes(q) ||
@@ -345,7 +348,7 @@ export const AdminPage: React.FC = () => {
             <div style={{ position: 'relative', flex: 1, minWidth: 220 }}>
               <input
                 type="text"
-                placeholder="Search by title, description or user ID..."
+                placeholder="Search by Ticket ID (e.g. TD-1001), user name, title..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 style={{
@@ -514,6 +517,9 @@ export const AdminPage: React.FC = () => {
                       backgroundColor: '#FBFBFD',
                     }}
                   >
+                    <th style={{ padding: '14px 16px', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                      Ticket ID
+                    </th>
                     <th style={{ padding: '14px 20px', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                       Ticket Details
                     </th>
@@ -554,6 +560,28 @@ export const AdminPage: React.FC = () => {
                         onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#FBFBFD')}
                         onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
                       >
+                        {/* Custom Ticket ID */}
+                        <td style={{ padding: '16px 16px', whiteSpace: 'nowrap' }}>
+                          <span
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 5,
+                              padding: '3px 8px',
+                              borderRadius: 4,
+                              backgroundColor: 'var(--accent-subtle)',
+                              color: 'var(--accent-primary)',
+                              fontSize: 12,
+                              fontWeight: 700,
+                              fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                              letterSpacing: '0.02em',
+                            }}
+                          >
+                            <Tag size={12} />
+                            <span>{formatTicketId(ticket)}</span>
+                          </span>
+                        </td>
+
                         {/* Title & Description */}
                         <td style={{ padding: '16px 20px', maxWidth: 360 }}>
                           <span
@@ -732,7 +760,24 @@ export const AdminPage: React.FC = () => {
                         marginBottom: 12,
                       }}
                     >
-                      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                      <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                        <span
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 4,
+                            padding: '2px 8px',
+                            borderRadius: 4,
+                            backgroundColor: 'var(--accent-subtle)',
+                            color: 'var(--accent-primary)',
+                            fontSize: 12,
+                            fontWeight: 700,
+                            fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                          }}
+                        >
+                          <Tag size={11} />
+                          <span>{formatTicketId(ticket)}</span>
+                        </span>
                         <StatusBadge status={ticket.status} />
                         <PriorityBadge priority={ticket.priority} />
                       </div>

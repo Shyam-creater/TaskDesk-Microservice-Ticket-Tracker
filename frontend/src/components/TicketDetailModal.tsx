@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { apiClient } from '../api/client';
-import { Ticket, TicketStatus } from '../types';
+import { Ticket, TicketStatus, formatTicketId } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { StatusBadge, PriorityBadge } from './Badge';
@@ -16,6 +16,7 @@ import {
   Save,
   Shield,
   ArrowRight,
+  Tag,
 } from 'lucide-react';
 
 interface TicketDetailModalProps {
@@ -234,17 +235,36 @@ export const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
                     marginBottom: 12,
                   }}
                 >
-                  <span
-                    style={{
-                      fontSize: 11,
-                      fontWeight: 600,
-                      color: 'var(--text-tertiary)',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.05em',
-                    }}
-                  >
-                    Ticket Details
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 4,
+                        padding: '2px 8px',
+                        borderRadius: 4,
+                        backgroundColor: 'var(--accent-subtle)',
+                        color: 'var(--accent-primary)',
+                        fontSize: 12,
+                        fontWeight: 700,
+                        fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                      }}
+                    >
+                      <Tag size={12} />
+                      <span>{formatTicketId(currentTicket)}</span>
+                    </span>
+                    <span
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 600,
+                        color: 'var(--text-tertiary)',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em',
+                      }}
+                    >
+                      Ticket Details
+                    </span>
+                  </div>
                   {canEditContent && !editingContent && (
                     <button
                       type="button"
@@ -388,6 +408,15 @@ export const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
                     color: 'var(--text-tertiary)',
                   }}
                 >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <Tag size={13} color="var(--accent-primary)" />
+                    <span>
+                      Ticket ID:{' '}
+                      <strong style={{ color: 'var(--text-primary)', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace' }}>
+                        {formatTicketId(currentTicket)}
+                      </strong>
+                    </span>
+                  </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                     <Clock size={13} />
                     <span>Created: {new Date(currentTicket.createdAt).toLocaleString()}</span>
