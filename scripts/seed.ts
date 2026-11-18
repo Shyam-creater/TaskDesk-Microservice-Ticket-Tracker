@@ -1,11 +1,22 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
+import path from 'path';
 
 dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
-const AUTH_MONGO_URI = process.env.AUTH_MONGO_URI || 'mongodb://localhost:27017/auth_db';
-const TICKET_MONGO_URI = process.env.TICKET_MONGO_URI || 'mongodb://localhost:27017/ticket_db';
+const AUTH_MONGO_URI =
+  process.env.AUTH_MONGO_URI ||
+  (process.env.MONGODB_URI
+    ? process.env.MONGODB_URI.replace(/\/[^/?]+(\?|$)/, '/auth_db$1')
+    : 'mongodb://localhost:27017/auth_db');
+
+const TICKET_MONGO_URI =
+  process.env.TICKET_MONGO_URI ||
+  (process.env.MONGODB_URI
+    ? process.env.MONGODB_URI.replace(/\/[^/?]+(\?|$)/, '/ticket_db$1')
+    : 'mongodb://localhost:27017/ticket_db');
 
 // Minimal User Schema for seeding
 const userSchema = new mongoose.Schema(

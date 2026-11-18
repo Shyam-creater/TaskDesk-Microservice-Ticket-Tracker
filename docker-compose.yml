@@ -64,7 +64,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=4001
-      - MONGO_URI=mongodb://mongo:27017/auth_db
+      - MONGO_URI=${AUTH_MONGO_URI:-mongodb://mongo:27017/auth_db}
       - JWT_SECRET=${JWT_SECRET:-supersecret_jwt_signing_key_at_least_32_characters_long_for_security}
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-1h}
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318/v1/traces
@@ -98,7 +98,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=4002
-      - MONGO_URI=mongodb://mongo:27017/ticket_db
+      - MONGO_URI=${TICKET_MONGO_URI:-mongodb://mongo:27017/ticket_db}
       - JWT_SECRET=${JWT_SECRET:-supersecret_jwt_signing_key_at_least_32_characters_long_for_security}
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318/v1/traces
       - LOG_LEVEL=${LOG_LEVEL:-info}
