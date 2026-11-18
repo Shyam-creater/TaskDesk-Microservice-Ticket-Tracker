@@ -21,8 +21,8 @@ router.use(
   createProxyMiddleware({
     target: config.AUTH_SERVICE_URL,
     changeOrigin: true,
-    pathRewrite: {
-      '^/api/auth': '/auth',
+    pathRewrite: (_path, req) => {
+      return (req.originalUrl || '').replace(/^\/api/, '');
     },
     on: {
       proxyReq: (proxyReq, req) => {
@@ -70,8 +70,8 @@ router.use(
   createProxyMiddleware({
     target: config.TICKET_SERVICE_URL,
     changeOrigin: true,
-    pathRewrite: {
-      '^/api/tickets': '/tickets',
+    pathRewrite: (_path, req) => {
+      return (req.originalUrl || '').replace(/^\/api/, '');
     },
     on: {
       proxyReq: (proxyReq, req) => {

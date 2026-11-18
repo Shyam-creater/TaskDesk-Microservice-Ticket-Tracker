@@ -8,7 +8,7 @@
     "dev:ticket": "cd services/ticket-service && npm run dev",
     "dev:gateway": "cd services/api-gateway && npm run dev",
     "dev:frontend": "cd frontend && npm run dev",
-    "seed": "cd services/auth-service && npx tsx ../../scripts/seed.ts",
+    "seed": "node -e \"process.env.NODE_PATH='services/auth-service/node_modules'; require('module').Module._initPaths(); require('child_process').execSync('npx --prefix services/auth-service tsx scripts/seed.ts', { stdio: 'inherit', env: process.env })\"",
     "test:auth": "cd services/auth-service && npm test",
     "test:ticket": "cd services/ticket-service && npm test",
     "test:gateway": "cd services/api-gateway && npm test",
