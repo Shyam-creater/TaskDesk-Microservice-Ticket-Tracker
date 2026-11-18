@@ -44,7 +44,7 @@ export class AuthService {
       role: 'user',
     });
 
-    const token = this.generateToken(user._id.toString(), user.email, user.role);
+    const token = this.generateToken(user._id.toString(), user.email, user.role, user.name);
     userRegistrationsTotal.labels('success').inc();
 
     return {
@@ -74,7 +74,7 @@ export class AuthService {
       throw new UnauthorizedError('Invalid email or password');
     }
 
-    const token = this.generateToken(user._id.toString(), user.email, user.role);
+    const token = this.generateToken(user._id.toString(), user.email, user.role, user.name);
     userLoginsTotal.labels('success').inc();
 
     return {
@@ -87,6 +87,17 @@ export class AuthService {
       },
       token,
     };
+  }
+
+  async getAllUsers(): Promise<UserResponse[]> {
+    const users = await this.userRepo.findAll();
+    return users.map((u) => ({
+      id: u._id.toString(),
+      name: u.name,
+      email: u.email,
+      role: u.role,
+      createdAt: u.createdAt,
+    }));
   }
 
   async getMe(userId: string): Promise<UserResponse> {
@@ -104,12 +115,13 @@ export class AuthService {
     };
   }
 
-  private generateToken(userId: string, email: string, role: string): string {
+  private generateToken(userId: string, email: string, role: string, name?: string): string {
     return jwt.sign(
       {
         id: userId,
         email,
         role,
+        name: name || email.split('@')[0],
       },
       config.JWT_SECRET,
       {

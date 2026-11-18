@@ -17,6 +17,8 @@ export interface ITicket extends Document {
   status: TicketStatus;
   priority: TicketPriority;
   createdBy: string;
+  createdByName?: string;
+  createdByEmail?: string;
   reviewedBy?: string;
   reviewedAt?: Date;
   statusHistory: IStatusHistoryItem[];
@@ -79,6 +81,14 @@ const TicketSchema = new Schema<ITicket>(
       type: String,
       required: true,
       index: true,
+    },
+    createdByName: {
+      type: String,
+      default: '',
+    },
+    createdByEmail: {
+      type: String,
+      default: '',
     },
     reviewedBy: {
       type: String,

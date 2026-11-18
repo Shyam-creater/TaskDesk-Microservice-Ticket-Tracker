@@ -5,6 +5,8 @@ export interface CreateTicketData {
   description?: string;
   priority?: TicketPriority;
   createdBy: string;
+  createdByName?: string;
+  createdByEmail?: string;
 }
 
 export interface TicketFilterQuery {
@@ -35,6 +37,8 @@ export class TicketRepository {
       priority: data.priority || 'medium',
       status: 'open',
       createdBy: data.createdBy,
+      createdByName: data.createdByName || '',
+      createdByEmail: data.createdByEmail || '',
       statusHistory: [],
     });
     return await ticket.save();

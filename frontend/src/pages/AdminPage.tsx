@@ -37,6 +37,21 @@ export const AdminPage: React.FC = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [ticketToDelete, setTicketToDelete] = useState<Ticket | null>(null);
+  const [usersMap, setUsersMap] = useState<Record<string, { name: string; email: string }>>({});
+
+  const fetchUsers = useCallback(async () => {
+    try {
+      const response = await apiClient.get('/auth/users');
+      const users: Array<{ id: string; name: string; email: string }> = response.data.data.users || [];
+      const map: Record<string, { name: string; email: string }> = {};
+      for (const u of users) {
+        map[u.id] = { name: u.name, email: u.email };
+      }
+      setUsersMap(map);
+    } catch {
+      // Silently continue if users endpoint is inaccessible
+    }
+  }, []);
 
   const fetchStats = useCallback(async () => {
     setLoadingStats(true);
@@ -76,7 +91,28 @@ export const AdminPage: React.FC = () => {
   const refreshAll = useCallback(() => {
     fetchStats();
     fetchTickets();
-  }, [fetchStats, fetchTickets]);
+    fetchUsers();
+  }, [fetchStats, fetchTickets, fetchUsers]);
+
+  const getUserDisplayName = useCallback(
+    (ticket: Ticket): string => {
+      if (ticket.createdByName && ticket.createdByName.trim()) return ticket.createdByName;
+      if (usersMap[ticket.createdBy]?.name) return usersMap[ticket.createdBy].name;
+      if (ticket.createdByEmail) return ticket.createdByEmail.split('@')[0];
+      if (usersMap[ticket.createdBy]?.email) return usersMap[ticket.createdBy].email.split('@')[0];
+      return `User ${ticket.createdBy.substring(0, 8)}`;
+    },
+    [usersMap]
+  );
+
+  const getUserDisplayEmail = useCallback(
+    (ticket: Ticket): string => {
+      if (ticket.createdByEmail) return ticket.createdByEmail;
+      if (usersMap[ticket.createdBy]?.email) return usersMap[ticket.createdBy].email;
+      return '';
+    },
+    [usersMap]
+  );
 
   useEffect(() => {
     refreshAll();
@@ -98,10 +134,14 @@ export const AdminPage: React.FC = () => {
 
   const filteredTickets = tickets.filter((t) => {
     const q = search.toLowerCase();
+    const userName = getUserDisplayName(t).toLowerCase();
+    const userEmail = getUserDisplayEmail(t).toLowerCase();
     return (
       t.title.toLowerCase().includes(q) ||
       (t.description && t.description.toLowerCase().includes(q)) ||
-      t.createdBy.toLowerCase().includes(q)
+      t.createdBy.toLowerCase().includes(q) ||
+      userName.includes(q) ||
+      userEmail.includes(q)
     );
   });
 
@@ -553,24 +593,28 @@ export const AdminPage: React.FC = () => {
                           <PriorityBadge priority={ticket.priority} />
                         </td>
 
-                        {/* Created By User ID */}
+                        {/* Created By User Name & Email */}
                         <td style={{ padding: '16px 16px', whiteSpace: 'nowrap' }}>
-                          <span
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: 6,
-                              fontSize: 12,
-                              color: 'var(--text-secondary)',
-                              fontFamily: 'monospace',
-                              backgroundColor: '#F2F2F7',
-                              padding: '2px 8px',
-                              borderRadius: 4,
-                            }}
-                          >
-                            <User size={11} />
-                            {ticket.createdBy.substring(0, 10)}...
-                          </span>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                            <span
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 6,
+                                fontSize: 13,
+                                fontWeight: 600,
+                                color: 'var(--text-primary)',
+                              }}
+                            >
+                              <User size={13} color="var(--accent-primary)" />
+                              <span>{getUserDisplayName(ticket)}</span>
+                            </span>
+                            {getUserDisplayEmail(ticket) && (
+                              <span style={{ fontSize: 11, color: 'var(--text-tertiary)', paddingLeft: 19 }}>
+                                {getUserDisplayEmail(ticket)}
+                              </span>
+                            )}
+                          </div>
                         </td>
 
                         {/* Date */}
@@ -741,17 +785,17 @@ export const AdminPage: React.FC = () => {
                         style={{
                           display: 'inline-flex',
                           alignItems: 'center',
-                          gap: 5,
-                          fontSize: 11,
-                          color: 'var(--text-tertiary)',
+                          gap: 6,
+                          fontSize: 12,
+                          fontWeight: 500,
+                          color: 'var(--text-primary)',
                           backgroundColor: '#F2F2F7',
-                          padding: '2px 8px',
-                          borderRadius: 4,
-                          fontFamily: 'monospace',
+                          padding: '4px 10px',
+                          borderRadius: 'var(--radius-sm)',
                         }}
                       >
-                        <User size={11} />
-                        <span>User: {ticket.createdBy.substring(0, 10)}...</span>
+                        <User size={12} color="var(--accent-primary)" />
+                        <span>Raised by: <strong>{getUserDisplayName(ticket)}</strong></span>
                       </span>
                     </div>
                   </div>

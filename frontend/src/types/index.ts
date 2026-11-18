@@ -25,6 +25,8 @@ export interface Ticket {
   status: TicketStatus;
   priority: TicketPriority;
   createdBy: string;
+  createdByName?: string;
+  createdByEmail?: string;
   reviewedBy?: string;
   reviewedAt?: string;
   statusHistory?: StatusHistoryItem[];

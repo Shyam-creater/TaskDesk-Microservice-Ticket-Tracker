@@ -1,3 +1,5 @@
+import jwt from 'jsonwebtoken';
+import { config } from '../config/env';
 import { ticketRepository, TicketRepository, TicketFilterQuery, TicketStatsResult } from '../repositories/ticket.repository';
 import { messageRepository, MessageRepository } from '../repositories/message.repository';
 import {
@@ -27,10 +29,54 @@ export interface PaginatedTicketsResponse {
 export class TicketService {
   private repo: TicketRepository;
   private msgRepo: MessageRepository;
+  private usersCache: Map<string, { name: string; email: string }> = new Map();
+  private lastCacheTime = 0;
 
   constructor(repo: TicketRepository = ticketRepository, msgRepo: MessageRepository = messageRepository) {
     this.repo = repo;
     this.msgRepo = msgRepo;
+  }
+
+  private async enrichTickets(tickets: ITicket[]): Promise<ITicket[]> {
+    const missing = tickets.filter((t) => !t.createdByName);
+    if (missing.length === 0) return tickets;
+
+    const now = Date.now();
+    if (now - this.lastCacheTime > 30000 || this.usersCache.size === 0) {
+      try {
+        const authUrl = process.env.AUTH_SERVICE_URL || 'http://localhost:4001';
+        const internalToken = jwt.sign(
+          { id: 'internal-service', email: 'internal@taskdesk.local', role: 'admin' },
+          config.JWT_SECRET,
+          { expiresIn: '5m' }
+        );
+        const res = await fetch(`${authUrl}/auth/users`, {
+          headers: { Authorization: `Bearer ${internalToken}` },
+        });
+        if (res.ok) {
+          const body = (await res.json()) as { data?: { users?: Array<{ id: string; name: string; email: string }> } };
+          const userList = body?.data?.users || [];
+          for (const u of userList) {
+            this.usersCache.set(u.id, { name: u.name, email: u.email });
+          }
+          this.lastCacheTime = now;
+        }
+      } catch {
+        // Silently fallback if auth service is not reachable
+      }
+    }
+
+    for (const t of tickets) {
+      if (!t.createdByName && this.usersCache.has(t.createdBy)) {
+        const u = this.usersCache.get(t.createdBy)!;
+        t.set('createdByName', u.name);
+        t.set('createdByEmail', u.email);
+        t.createdByName = u.name;
+        t.createdByEmail = u.email;
+      }
+    }
+
+    return tickets;
   }
 
   async createTicket(input: CreateTicketInput, user: UserPayload): Promise<ITicket> {
@@ -44,6 +90,8 @@ export class TicketService {
       description: input.description,
       priority: input.priority,
       createdBy: user.id,
+      createdByName: user.name || user.email.split('@')[0],
+      createdByEmail: user.email,
     });
 
     ticketsCreatedTotal.labels(ticket.priority).inc();
@@ -61,6 +109,7 @@ export class TicketService {
       throw new NotFoundError('Ticket not found');
     }
 
+    await this.enrichTickets([ticket]);
     return ticket;
   }
 
@@ -83,6 +132,8 @@ export class TicketService {
       page: query.page,
       limit: query.limit,
     });
+
+    await this.enrichTickets(tickets);
 
     return {
       tickets,

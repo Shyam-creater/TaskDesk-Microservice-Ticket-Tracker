@@ -393,8 +393,14 @@ export const TicketDetailModal: React.FC<TicketDetailModalProps> = ({
                     <span>Created: {new Date(currentTicket.createdAt).toLocaleString()}</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <UserIcon size={13} />
-                    <span>Creator ID: {currentTicket.createdBy.substring(0, 10)}...</span>
+                    <UserIcon size={13} color="var(--accent-primary)" />
+                    <span>
+                      Raised by:{' '}
+                      <strong style={{ color: 'var(--text-primary)' }}>
+                        {currentTicket.createdByName || currentTicket.createdByEmail || `User ${currentTicket.createdBy.substring(0, 8)}`}
+                      </strong>
+                      {currentTicket.createdByEmail && ` (${currentTicket.createdByEmail})`}
+                    </span>
                   </div>
                   {currentTicket.reviewedAt && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#5856D6' }}>

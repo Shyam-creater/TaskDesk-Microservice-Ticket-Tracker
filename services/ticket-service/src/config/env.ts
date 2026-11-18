@@ -25,6 +25,7 @@ const envSchema = z.object({
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
   OTEL_EXPORTER_OTLP_ENDPOINT: z.string().default('http://localhost:4318/v1/traces'),
   CORS_ORIGIN: z.string().default('*'),
+  AUTH_SERVICE_URL: z.string().default(process.env.AUTH_SERVICE_URL || 'http://localhost:4001'),
 });
 
 const parsedEnv = envSchema.safeParse({

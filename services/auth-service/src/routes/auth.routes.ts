@@ -10,5 +10,6 @@ const router = Router();
 router.post('/register', authRateLimiter, validate(registerSchema), authController.register);
 router.post('/login', authRateLimiter, validate(loginSchema), authController.login);
 router.get('/me', authenticateToken, authController.getMe);
+router.get('/users', authenticateToken, authController.getUsers);
 
 export const authRoutes = router;

@@ -50,6 +50,17 @@ export class AuthController {
       next(error);
     }
   };
+
+  getUsers = async (_req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const users = await this.service.getAllUsers();
+      res.status(200).json({
+        data: { users },
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
 }
 
 export const authController = new AuthController();
