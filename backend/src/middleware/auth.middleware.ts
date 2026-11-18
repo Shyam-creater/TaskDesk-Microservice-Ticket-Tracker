@@ -1,8 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { config } from '../config/env.js';
 import { UnauthorizedError, ForbiddenError } from './error.middleware.js';
 import { UserRole } from '../models/user.model.js';
+
+const JWT_SECRET =
+  process.env.JWT_SECRET || 'supersecret_jwt_signing_key_at_least_32_characters_long_for_security';
 
 export interface UserPayload {
   id: string;
@@ -27,7 +29,7 @@ export const authenticateToken = (
 
   const token = authHeader.split(' ')[1];
   try {
-    const decoded = jwt.verify(token, config.JWT_SECRET) as UserPayload;
+    const decoded = jwt.verify(token, JWT_SECRET) as UserPayload;
     req.user = decoded;
     next();
   } catch {

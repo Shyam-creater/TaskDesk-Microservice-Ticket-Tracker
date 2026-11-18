@@ -1,8 +1,11 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { User, IUser, UserRole } from '../models/user.model.js';
-import { config } from '../config/env.js';
 import { ConflictError, UnauthorizedError, NotFoundError } from '../middleware/error.middleware.js';
+
+const JWT_SECRET =
+  process.env.JWT_SECRET || 'supersecret_jwt_signing_key_at_least_32_characters_long_for_security';
+const JWT_EXPIRES_IN = (process.env.JWT_EXPIRES_IN || '7d') as jwt.SignOptions['expiresIn'];
 
 export interface RegisterDTO {
   name: string;
@@ -34,8 +37,8 @@ export class AuthService {
         role: user.role,
         name: user.name,
       },
-      config.JWT_SECRET,
-      { expiresIn: '24h' }
+      JWT_SECRET,
+      { expiresIn: JWT_EXPIRES_IN }
     );
   }
 

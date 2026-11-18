@@ -1,17 +1,27 @@
+import dotenv from 'dotenv';
+import path from 'path';
+
+// Load .env directly
+dotenv.config();
+dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+
 import { app } from './app.js';
-import { config } from './config/env.js';
 import { connectDB } from './config/db.js';
 import { seedDatabase } from './seed.js';
+
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 4000;
+const NODE_ENV = process.env.NODE_ENV || 'development';
 
 async function startServer() {
   try {
     await connectDB();
     await seedDatabase();
 
-    const server = app.listen(config.PORT, () => {
-      console.log(`🚀 TaskDesk Backend running on http://localhost:${config.PORT}`);
-      console.log(`📁 Environment: ${config.NODE_ENV}`);
-      console.log(`📡 API Endpoints active at: http://localhost:${config.PORT}/api`);
+    const server = app.listen(PORT, () => {
+      console.log(`🚀 TaskDesk Backend running on http://localhost:${PORT}`);
+      console.log(`📁 Environment: ${NODE_ENV}`);
+      console.log(`📡 API Endpoints active at: http://localhost:${PORT}/api`);
     });
 
     const shutdown = async () => {
