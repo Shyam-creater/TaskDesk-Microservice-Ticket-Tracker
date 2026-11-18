@@ -39,7 +39,7 @@ export const Navbar: React.FC = () => {
         {/* Left: Brand & Navigation */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
           <Link
-            to="/"
+            to={isAdmin ? '/admin' : '/tickets'}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -68,25 +68,25 @@ export const Navbar: React.FC = () => {
           </Link>
 
           <nav style={{ display: 'flex', gap: 8 }}>
-            <Link
-              to="/tickets"
-              style={{
-                padding: '6px 14px',
-                fontSize: 14,
-                fontWeight: isTicketsActive ? 600 : 500,
-                borderRadius: 'var(--radius-sm)',
-                color: isTicketsActive ? 'var(--accent-primary)' : 'var(--text-secondary)',
-                backgroundColor: isTicketsActive ? 'var(--accent-subtle)' : 'transparent',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-              }}
-            >
-              <TicketIcon size={16} />
-              <span>My Tickets</span>
-            </Link>
-
-            {isAdmin && (
+            {!isAdmin ? (
+              <Link
+                to="/tickets"
+                style={{
+                  padding: '6px 14px',
+                  fontSize: 14,
+                  fontWeight: isTicketsActive ? 600 : 500,
+                  borderRadius: 'var(--radius-sm)',
+                  color: isTicketsActive ? 'var(--accent-primary)' : 'var(--text-secondary)',
+                  backgroundColor: isTicketsActive ? 'var(--accent-subtle)' : 'transparent',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                }}
+              >
+                <TicketIcon size={16} />
+                <span>My Tickets</span>
+              </Link>
+            ) : (
               <Link
                 to="/admin"
                 style={{
@@ -102,7 +102,7 @@ export const Navbar: React.FC = () => {
                 }}
               >
                 <ShieldCheck size={16} />
-                <span>Admin View</span>
+                <span>Admin Console</span>
               </Link>
             )}
           </nav>

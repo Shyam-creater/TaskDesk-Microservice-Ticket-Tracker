@@ -6,6 +6,7 @@ import { Navbar } from '../components/Navbar';
 import { StatusBadge, PriorityBadge } from '../components/Badge';
 import { TicketDetailModal } from '../components/TicketDetailModal';
 import { DeleteConfirmModal } from '../components/DeleteConfirmModal';
+import { ViewToggle, ViewMode } from '../components/ViewToggle';
 import { Skeleton } from '../components/Skeleton';
 import {
   ShieldCheck,
@@ -20,6 +21,7 @@ import {
   CheckCircle2,
   Archive,
   Layers,
+  MessageSquare,
 } from 'lucide-react';
 
 export const AdminPage: React.FC = () => {
@@ -31,6 +33,7 @@ export const AdminPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | TicketStatus>('all');
   const [priorityFilter, setPriorityFilter] = useState<'all' | TicketPriority>('all');
+  const [viewMode, setViewMode] = useState<ViewMode>('table');
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [ticketToDelete, setTicketToDelete] = useState<Ticket | null>(null);
 
@@ -284,126 +287,151 @@ export const AdminPage: React.FC = () => {
           })}
         </div>
 
-        {/* Filters & Search Controls */}
+        {/* Filters, Search & View Mode Switcher */}
         <div
           style={{
             display: 'flex',
             flexWrap: 'wrap',
             alignItems: 'center',
+            justifyContent: 'space-between',
             gap: 12,
-            marginBottom: 18,
+            marginBottom: 20,
           }}
         >
-          {/* Search Box */}
-          <div style={{ position: 'relative', flex: 1, minWidth: 260 }}>
-            <input
-              type="text"
-              placeholder="Filter by title, description or user ID..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
+          {/* Left: Search & Filter dropdowns */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10, flex: 1, minWidth: 280 }}>
+            {/* Search Box */}
+            <div style={{ position: 'relative', flex: 1, minWidth: 220 }}>
+              <input
+                type="text"
+                placeholder="Search by title, description or user ID..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                style={{
+                  width: '100%',
+                  height: 40,
+                  padding: '0 14px 0 36px',
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px solid var(--border-color)',
+                  backgroundColor: '#FFFFFF',
+                  color: 'var(--text-primary)',
+                  fontSize: 14,
+                }}
+              />
+              <Search
+                size={15}
+                color="var(--text-tertiary)"
+                style={{ position: 'absolute', left: 12, top: 13 }}
+              />
+            </div>
+
+            {/* Status Dropdown */}
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as 'all' | TicketStatus)}
               style={{
-                width: '100%',
                 height: 40,
-                padding: '0 14px 0 36px',
+                padding: '0 14px',
                 borderRadius: 'var(--radius-sm)',
                 border: '1px solid var(--border-color)',
                 backgroundColor: '#FFFFFF',
                 color: 'var(--text-primary)',
-                fontSize: 14,
+                fontSize: 13,
+                fontWeight: 500,
               }}
-            />
-            <Search
-              size={15}
-              color="var(--text-tertiary)"
-              style={{ position: 'absolute', left: 12, top: 13 }}
-            />
+            >
+              <option value="all">All Statuses</option>
+              <option value="open">Open</option>
+              <option value="in_review">In Review</option>
+              <option value="in_progress">In Progress</option>
+              <option value="resolved">Resolved</option>
+              <option value="closed">Closed</option>
+            </select>
+
+            {/* Priority Dropdown */}
+            <select
+              value={priorityFilter}
+              onChange={(e) => setPriorityFilter(e.target.value as 'all' | TicketPriority)}
+              style={{
+                height: 40,
+                padding: '0 14px',
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--border-color)',
+                backgroundColor: '#FFFFFF',
+                color: 'var(--text-primary)',
+                fontSize: 13,
+                fontWeight: 500,
+              }}
+            >
+              <option value="all">All Priorities</option>
+              <option value="high">High Priority</option>
+              <option value="medium">Medium Priority</option>
+              <option value="low">Low Priority</option>
+            </select>
           </div>
 
-          {/* Status Dropdown */}
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as 'all' | TicketStatus)}
-            style={{
-              height: 40,
-              padding: '0 14px',
-              borderRadius: 'var(--radius-sm)',
-              border: '1px solid var(--border-color)',
-              backgroundColor: '#FFFFFF',
-              color: 'var(--text-primary)',
-              fontSize: 13,
-              fontWeight: 500,
-            }}
-          >
-            <option value="all">All Statuses</option>
-            <option value="open">Open</option>
-            <option value="in_review">In Review</option>
-            <option value="in_progress">In Progress</option>
-            <option value="resolved">Resolved</option>
-            <option value="closed">Closed</option>
-          </select>
-
-          {/* Priority Dropdown */}
-          <select
-            value={priorityFilter}
-            onChange={(e) => setPriorityFilter(e.target.value as 'all' | TicketPriority)}
-            style={{
-              height: 40,
-              padding: '0 14px',
-              borderRadius: 'var(--radius-sm)',
-              border: '1px solid var(--border-color)',
-              backgroundColor: '#FFFFFF',
-              color: 'var(--text-primary)',
-              fontSize: 13,
-              fontWeight: 500,
-            }}
-          >
-            <option value="all">All Priorities</option>
-            <option value="high">High Priority</option>
-            <option value="medium">Medium Priority</option>
-            <option value="low">Low Priority</option>
-          </select>
+          {/* Right: Table vs Grid Format Switcher */}
+          <ViewToggle viewMode={viewMode} onChange={setViewMode} />
         </div>
 
-        {/* Tickets Table */}
-        <div
-          style={{
-            backgroundColor: 'var(--surface)',
-            borderRadius: 'var(--radius-lg)',
-            border: '1px solid var(--border-light)',
-            boxShadow: 'var(--shadow-card)',
-            overflow: 'hidden',
-          }}
-        >
-          {loading ? (
-            <div style={{ padding: 24 }}>
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div
-                  key={i}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 16,
-                    padding: '16px 0',
-                    borderBottom: '1px solid var(--border-light)',
-                  }}
-                >
-                  <Skeleton width={80} height={24} borderRadius={12} />
-                  <Skeleton width="40%" height={20} />
-                  <Skeleton width={100} height={20} />
-                  <Skeleton width={80} height={32} borderRadius={6} style={{ marginLeft: 'auto' }} />
-                </div>
-              ))}
-            </div>
-          ) : filteredTickets.length === 0 ? (
-            <div style={{ padding: '60px 20px', textAlign: 'center' }}>
-              <p style={{ fontSize: 16, fontWeight: 500, color: 'var(--text-primary)' }}>
-                No tickets match your filters
-              </p>
-              <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginTop: 4 }}>
-                Try adjusting your search query, status, or priority filter.
-              </p>
-            </div>
-          ) : (
+        {/* Tickets Content - Table OR Grid */}
+        {loading ? (
+          <div
+            style={{
+              backgroundColor: 'var(--surface)',
+              borderRadius: 'var(--radius-lg)',
+              border: '1px solid var(--border-light)',
+              boxShadow: 'var(--shadow-card)',
+              padding: 24,
+            }}
+          >
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div
+                key={i}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 16,
+                  padding: '16px 0',
+                  borderBottom: '1px solid var(--border-light)',
+                }}
+              >
+                <Skeleton width={80} height={24} borderRadius={12} />
+                <Skeleton width="40%" height={20} />
+                <Skeleton width={100} height={20} />
+                <Skeleton width={80} height={32} borderRadius={6} style={{ marginLeft: 'auto' }} />
+              </div>
+            ))}
+          </div>
+        ) : filteredTickets.length === 0 ? (
+          <div
+            style={{
+              backgroundColor: 'var(--surface)',
+              borderRadius: 'var(--radius-lg)',
+              border: '1px solid var(--border-light)',
+              boxShadow: 'var(--shadow-card)',
+              padding: '60px 20px',
+              textAlign: 'center',
+            }}
+          >
+            <p style={{ fontSize: 16, fontWeight: 500, color: 'var(--text-primary)' }}>
+              No tickets match your filters
+            </p>
+            <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginTop: 4 }}>
+              Try adjusting your search query, status, or priority filter.
+            </p>
+          </div>
+        ) : viewMode === 'table' ? (
+          /* ==================== TABLE FORMAT ==================== */
+          <div
+            style={{
+              backgroundColor: 'var(--surface)',
+              borderRadius: 'var(--radius-lg)',
+              border: '1px solid var(--border-light)',
+              boxShadow: 'var(--shadow-card)',
+              overflow: 'hidden',
+            }}
+          >
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                 <thead>
@@ -573,8 +601,185 @@ export const AdminPage: React.FC = () => {
                 </tbody>
               </table>
             </div>
-          )}
-        </div>
+          </div>
+        ) : (
+          /* ==================== GRID FORMAT ==================== */
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(330px, 1fr))',
+              gap: 18,
+            }}
+          >
+            {filteredTickets.map((ticket) => {
+              const formattedDate = new Date(ticket.createdAt).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+              });
+
+              return (
+                <div
+                  key={ticket._id}
+                  onClick={() => setSelectedTicket(ticket)}
+                  style={{
+                    backgroundColor: 'var(--surface)',
+                    borderRadius: 'var(--radius-md)',
+                    border: '1px solid var(--border-light)',
+                    boxShadow: 'var(--shadow-subtle)',
+                    padding: '20px 22px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    transition: 'transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast)',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = 'var(--shadow-card)';
+                    e.currentTarget.style.borderColor = 'var(--border-color)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'none';
+                    e.currentTarget.style.boxShadow = 'var(--shadow-subtle)';
+                    e.currentTarget.style.borderColor = 'var(--border-light)';
+                  }}
+                >
+                  <div>
+                    {/* Header Badges */}
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        marginBottom: 12,
+                      }}
+                    >
+                      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                        <StatusBadge status={ticket.status} />
+                        <PriorityBadge priority={ticket.priority} />
+                      </div>
+                      <span
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 4,
+                          fontSize: 12,
+                          color: 'var(--text-tertiary)',
+                        }}
+                      >
+                        <Calendar size={13} />
+                        {formattedDate}
+                      </span>
+                    </div>
+
+                    {/* Title */}
+                    <h3
+                      style={{
+                        fontSize: 16,
+                        fontWeight: 600,
+                        color: 'var(--text-primary)',
+                        lineHeight: 1.35,
+                        marginBottom: 8,
+                      }}
+                    >
+                      {ticket.title}
+                    </h3>
+
+                    {/* Description */}
+                    <p
+                      style={{
+                        fontSize: 14,
+                        color: 'var(--text-secondary)',
+                        lineHeight: 1.45,
+                        marginBottom: 14,
+                        display: '-webkit-box',
+                        WebkitLineClamp: 3,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      {ticket.description || 'No additional details provided.'}
+                    </p>
+
+                    {/* User Creator Tag */}
+                    <div style={{ marginBottom: 16 }}>
+                      <span
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 5,
+                          fontSize: 11,
+                          color: 'var(--text-tertiary)',
+                          backgroundColor: '#F2F2F7',
+                          padding: '2px 8px',
+                          borderRadius: 4,
+                          fontFamily: 'monospace',
+                        }}
+                      >
+                        <User size={11} />
+                        <span>User: {ticket.createdBy.substring(0, 10)}...</span>
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Footer Action Bar */}
+                  <div
+                    style={{
+                      paddingTop: 14,
+                      borderTop: '1px solid var(--border-light)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <button
+                      onClick={() => setSelectedTicket(ticket)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        padding: '6px 12px',
+                        borderRadius: 'var(--radius-sm)',
+                        backgroundColor: 'var(--accent-subtle)',
+                        color: 'var(--accent-primary)',
+                        fontSize: 13,
+                        fontWeight: 600,
+                        border: '1px solid rgba(0, 113, 227, 0.2)',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <MessageSquare size={14} />
+                      <span>Manage & Chat</span>
+                    </button>
+
+                    <button
+                      onClick={() => setTicketToDelete(ticket)}
+                      aria-label="Delete ticket"
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 4,
+                        padding: '6px 10px',
+                        borderRadius: 'var(--radius-sm)',
+                        backgroundColor: 'var(--status-danger-bg)',
+                        color: 'var(--status-danger)',
+                        fontSize: 12,
+                        fontWeight: 600,
+                        border: '1px solid rgba(255, 59, 48, 0.2)',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <Trash2 size={13} />
+                      <span>Delete</span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </main>
 
       {/* Ticket Details & Chat Modal */}

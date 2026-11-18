@@ -8,6 +8,7 @@ import { StatusBadge, PriorityBadge } from '../components/Badge';
 import { SegmentedControl, SegmentOption } from '../components/SegmentedControl';
 import { CreateTicketModal } from '../components/CreateTicketModal';
 import { TicketDetailModal } from '../components/TicketDetailModal';
+import { ViewToggle, ViewMode } from '../components/ViewToggle';
 import { Skeleton } from '../components/Skeleton';
 import { Plus, Ticket as TicketIcon, Calendar, MessageSquare, ChevronRight } from 'lucide-react';
 
@@ -17,6 +18,7 @@ export const TicketsPage: React.FC = () => {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<'all' | TicketStatus>('all');
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
 
@@ -122,16 +124,30 @@ export const TicketsPage: React.FC = () => {
           )}
         </div>
 
-        {/* Filter Segmented Control */}
-        <div style={{ marginBottom: 24, overflowX: 'auto', paddingBottom: 4 }}>
-          <SegmentedControl
-            options={statusOptions}
-            value={statusFilter}
-            onChange={(val) => setStatusFilter(val)}
-          />
+        {/* Filter Segmented Control & View Mode Switcher */}
+        <div
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 12,
+            marginBottom: 24,
+          }}
+        >
+          <div style={{ overflowX: 'auto', paddingBottom: 4 }}>
+            <SegmentedControl
+              options={statusOptions}
+              value={statusFilter}
+              onChange={(val) => setStatusFilter(val)}
+            />
+          </div>
+
+          {/* Table / Grid Format Switcher */}
+          <ViewToggle viewMode={viewMode} onChange={setViewMode} />
         </div>
 
-        {/* Tickets Grid / List */}
+        {/* Tickets Grid / Table Content */}
         {loading ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16 }}>
             {[1, 2, 3, 4].map((i) => (
@@ -204,33 +220,161 @@ export const TicketsPage: React.FC = () => {
                 marginBottom: 20,
               }}
             >
-              {!isAdmin
-                ? 'Create your first support ticket to track technical questions, system issues, or feature requests.'
-                : 'No tickets currently match the selected status filter.'}
+              Create your first support ticket to track technical questions, system issues, or feature requests.
             </p>
-            {!isAdmin && (
-              <button
-                onClick={() => setIsCreateOpen(true)}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  padding: '9px 18px',
-                  borderRadius: 'var(--radius-sm)',
-                  backgroundColor: 'var(--accent-primary)',
-                  color: '#FFFFFF',
-                  fontSize: 14,
-                  fontWeight: 600,
-                  border: 'none',
-                  cursor: 'pointer',
-                }}
-              >
-                <Plus size={16} />
-                <span>Create Ticket</span>
-              </button>
-            )}
+            <button
+              onClick={() => setIsCreateOpen(true)}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '9px 18px',
+                borderRadius: 'var(--radius-sm)',
+                backgroundColor: 'var(--accent-primary)',
+                color: '#FFFFFF',
+                fontSize: 14,
+                fontWeight: 600,
+                border: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              <Plus size={16} />
+              <span>Create Ticket</span>
+            </button>
+          </div>
+        ) : viewMode === 'table' ? (
+          /* ==================== USER TABLE FORMAT ==================== */
+          <div
+            style={{
+              backgroundColor: 'var(--surface)',
+              borderRadius: 'var(--radius-lg)',
+              border: '1px solid var(--border-light)',
+              boxShadow: 'var(--shadow-card)',
+              overflow: 'hidden',
+            }}
+          >
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                <thead>
+                  <tr
+                    style={{
+                      borderBottom: '1px solid var(--border-light)',
+                      backgroundColor: '#FBFBFD',
+                    }}
+                  >
+                    <th style={{ padding: '14px 20px', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                      Ticket Details
+                    </th>
+                    <th style={{ padding: '14px 16px', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                      Status
+                    </th>
+                    <th style={{ padding: '14px 16px', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                      Priority
+                    </th>
+                    <th style={{ padding: '14px 16px', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                      Date Created
+                    </th>
+                    <th style={{ padding: '14px 20px', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'right' }}>
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tickets.map((ticket) => {
+                    const formattedDate = new Date(ticket.createdAt).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                    });
+
+                    return (
+                      <tr
+                        key={ticket._id}
+                        style={{
+                          borderBottom: '1px solid var(--border-light)',
+                          transition: 'background-color var(--transition-fast)',
+                          cursor: 'pointer',
+                        }}
+                        onClick={() => setSelectedTicket(ticket)}
+                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#FBFBFD')}
+                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                      >
+                        <td style={{ padding: '16px 20px', maxWidth: 380 }}>
+                          <span
+                            style={{
+                              display: 'block',
+                              fontSize: 14,
+                              fontWeight: 600,
+                              color: 'var(--text-primary)',
+                              marginBottom: 2,
+                            }}
+                          >
+                            {ticket.title}
+                          </span>
+                          {ticket.description && (
+                            <span
+                              style={{
+                                display: 'block',
+                                fontSize: 13,
+                                color: 'var(--text-secondary)',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                              }}
+                            >
+                              {ticket.description}
+                            </span>
+                          )}
+                        </td>
+
+                        <td style={{ padding: '16px 16px', whiteSpace: 'nowrap' }}>
+                          <StatusBadge status={ticket.status} />
+                        </td>
+
+                        <td style={{ padding: '16px 16px', whiteSpace: 'nowrap' }}>
+                          <PriorityBadge priority={ticket.priority} />
+                        </td>
+
+                        <td style={{ padding: '16px 16px', whiteSpace: 'nowrap', fontSize: 13, color: 'var(--text-secondary)' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <Calendar size={13} color="var(--text-tertiary)" />
+                            <span>{formattedDate}</span>
+                          </div>
+                        </td>
+
+                        <td style={{ padding: '16px 20px', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedTicket(ticket);
+                            }}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 6,
+                              padding: '6px 12px',
+                              borderRadius: 'var(--radius-sm)',
+                              backgroundColor: 'var(--accent-subtle)',
+                              color: 'var(--accent-primary)',
+                              fontSize: 12,
+                              fontWeight: 600,
+                              border: '1px solid rgba(0, 113, 227, 0.2)',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            <MessageSquare size={13} />
+                            <span>Open & Chat</span>
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         ) : (
+          /* ==================== USER GRID FORMAT ==================== */
           <div
             style={{
               display: 'grid',
