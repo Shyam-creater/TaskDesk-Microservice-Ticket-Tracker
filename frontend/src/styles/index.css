@@ -1,0 +1,102 @@
+:root {
+  /* Apple Design Tokens */
+  --bg-primary: #F5F5F7;
+  --surface: #FFFFFF;
+  --surface-secondary: #FBFBFD;
+  --text-primary: #1D1D1F;
+  --text-secondary: #6E6E73;
+  --text-tertiary: #86868B;
+  
+  --accent-primary: #0071E3;
+  --accent-hover: #0077ED;
+  --accent-subtle: #E8F2FD;
+  
+  --border-color: #D2D2D7;
+  --border-light: #E5E5EA;
+  
+  --status-success: #34C759;
+  --status-success-bg: #E8F8EE;
+  --status-warning: #FF9F0A;
+  --status-warning-bg: #FFF5E6;
+  --status-danger: #FF3B30;
+  --status-danger-bg: #FFECEB;
+  --status-info: #0071E3;
+  --status-info-bg: #E8F2FD;
+
+  /* Elevation / Shadows */
+  --shadow-subtle: 0 2px 12px rgba(0, 0, 0, 0.04);
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.06);
+  --shadow-modal: 0 20px 40px rgba(0, 0, 0, 0.15);
+
+  /* Radius */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-normal: 200ms ease;
+
+  /* Font Stack */
+  --font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", Roboto, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+a {
+  color: var(--accent-primary);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--accent-hover);
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  outline: none;
+  transition: all var(--transition-fast);
+}
+
+input, select, textarea {
+  font-family: inherit;
+  font-size: 15px;
+  outline: none;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #C7C7CC;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #AEAEB2;
+}
