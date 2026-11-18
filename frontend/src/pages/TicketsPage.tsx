@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { apiClient } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -10,20 +10,26 @@ import { CreateTicketModal } from '../components/CreateTicketModal';
 import { TicketDetailModal } from '../components/TicketDetailModal';
 import { ViewToggle, ViewMode } from '../components/ViewToggle';
 import { Skeleton } from '../components/Skeleton';
-import { Plus, Ticket as TicketIcon, Calendar, MessageSquare, ChevronRight, Tag, CheckCircle2 } from 'lucide-react';
+import { Plus, Ticket as TicketIcon, Calendar, MessageSquare, ChevronRight, Tag, CheckCircle2, RefreshCw } from 'lucide-react';
 
 export const TicketsPage: React.FC = () => {
   const { isAdmin } = useAuth();
   const { showToast } = useToast();
   const [tickets, setTickets] = useState<Ticket[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [isFiltering, setIsFiltering] = useState(false);
+  const hasLoadedRef = useRef(false);
   const [statusFilter, setStatusFilter] = useState<'all' | TicketStatus>('all');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
 
   const fetchTickets = useCallback(async () => {
-    setLoading(true);
+    if (!hasLoadedRef.current) {
+      setInitialLoading(true);
+    } else {
+      setIsFiltering(true);
+    }
     try {
       const params = new URLSearchParams();
       if (statusFilter !== 'all') {
@@ -33,11 +39,13 @@ export const TicketsPage: React.FC = () => {
 
       const response = await apiClient.get(`/tickets?${params.toString()}`);
       setTickets(response.data.data.tickets || []);
+      hasLoadedRef.current = true;
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to load tickets';
       showToast(msg, 'error');
     } finally {
-      setLoading(false);
+      setInitialLoading(false);
+      setIsFiltering(false);
     }
   }, [statusFilter, showToast]);
 
@@ -148,7 +156,7 @@ export const TicketsPage: React.FC = () => {
         </div>
 
         {/* Tickets Grid / Table Content */}
-        {loading ? (
+        {initialLoading ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16 }}>
             {[1, 2, 3, 4].map((i) => (
               <div
@@ -172,7 +180,7 @@ export const TicketsPage: React.FC = () => {
               </div>
             ))}
           </div>
-        ) : tickets.length === 0 ? (
+        ) : tickets.length === 0 && !isFiltering ? (
           /* Empty State */
           <div
             style={{
@@ -246,6 +254,7 @@ export const TicketsPage: React.FC = () => {
           /* ==================== USER TABLE FORMAT ==================== */
           <div
             style={{
+              position: 'relative',
               backgroundColor: 'var(--surface)',
               borderRadius: 'var(--radius-lg)',
               border: '1px solid var(--border-light)',
@@ -253,8 +262,35 @@ export const TicketsPage: React.FC = () => {
               overflow: 'hidden',
             }}
           >
+            {isFiltering && <div className="table-progress-bar" />}
+            {isFiltering && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: 10,
+                  right: 14,
+                  zIndex: 20,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '4px 10px',
+                  borderRadius: 'var(--radius-full)',
+                  backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                  backdropFilter: 'blur(8px)',
+                  border: '1px solid var(--border-light)',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: 'var(--accent-primary)',
+                  pointerEvents: 'none',
+                }}
+              >
+                <RefreshCw size={12} className="animate-spin" />
+                <span>Updating...</span>
+              </div>
+            )}
             <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+              <table style={{ width: '100%', tableLayout: 'fixed', borderCollapse: 'collapse', textAlign: 'left' }}>
                 <thead>
                   <tr
                     style={{
@@ -262,27 +298,33 @@ export const TicketsPage: React.FC = () => {
                       backgroundColor: '#FBFBFD',
                     }}
                   >
-                    <th style={{ padding: '14px 16px', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    <th style={{ width: 105, padding: '12px 14px', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                       Ticket ID
                     </th>
-                    <th style={{ padding: '14px 20px', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    <th style={{ width: '42%', minWidth: 180, padding: '12px 14px', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                       Ticket Details
                     </th>
-                    <th style={{ padding: '14px 16px', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    <th style={{ width: 115, padding: '12px 12px', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                       Status
                     </th>
-                    <th style={{ padding: '14px 16px', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    <th style={{ width: 105, padding: '12px 12px', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                       Priority
                     </th>
-                    <th style={{ padding: '14px 16px', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    <th style={{ width: 120, padding: '12px 12px', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                       Date Created
                     </th>
-                    <th style={{ padding: '14px 20px', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'right' }}>
+                    <th style={{ width: 120, padding: '12px 14px', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'right' }}>
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody
+                  style={{
+                    opacity: isFiltering ? 0.55 : 1,
+                    pointerEvents: isFiltering ? 'none' : 'auto',
+                    transition: 'opacity var(--transition-fast)',
+                  }}
+                >
                   {tickets.map((ticket) => {
                     const formattedDate = new Date(ticket.createdAt).toLocaleDateString('en-US', {
                       month: 'short',
@@ -303,7 +345,7 @@ export const TicketsPage: React.FC = () => {
                         onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
                       >
                         {/* Custom Ticket ID */}
-                        <td style={{ padding: '16px 16px', whiteSpace: 'nowrap' }}>
+                        <td style={{ padding: '12px 14px', whiteSpace: 'nowrap' }}>
                           <span
                             style={{
                               display: 'inline-flex',
@@ -324,15 +366,20 @@ export const TicketsPage: React.FC = () => {
                           </span>
                         </td>
 
-                        <td style={{ padding: '16px 20px', maxWidth: 380 }}>
+                        {/* Ticket Details - Reduced width with ellipsis */}
+                        <td style={{ padding: '12px 14px', overflow: 'hidden' }}>
                           <span
                             style={{
                               display: 'block',
-                              fontSize: 14,
+                              fontSize: 13.5,
                               fontWeight: 600,
                               color: 'var(--text-primary)',
                               marginBottom: 2,
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
                             }}
+                            title={ticket.title}
                           >
                             {ticket.title}
                           </span>
@@ -340,34 +387,35 @@ export const TicketsPage: React.FC = () => {
                             <span
                               style={{
                                 display: 'block',
-                                fontSize: 13,
+                                fontSize: 12,
                                 color: 'var(--text-secondary)',
                                 whiteSpace: 'nowrap',
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis',
                               }}
+                              title={ticket.description}
                             >
                               {ticket.description}
                             </span>
                           )}
                         </td>
 
-                        <td style={{ padding: '16px 16px', whiteSpace: 'nowrap' }}>
+                        <td style={{ padding: '12px 12px', whiteSpace: 'nowrap' }}>
                           <StatusBadge status={ticket.status} />
                         </td>
 
-                        <td style={{ padding: '16px 16px', whiteSpace: 'nowrap' }}>
+                        <td style={{ padding: '12px 12px', whiteSpace: 'nowrap' }}>
                           <PriorityBadge priority={ticket.priority} />
                         </td>
 
-                        <td style={{ padding: '16px 16px', whiteSpace: 'nowrap', fontSize: 13, color: 'var(--text-secondary)' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <Calendar size={13} color="var(--text-tertiary)" />
+                        <td style={{ padding: '12px 12px', whiteSpace: 'nowrap', fontSize: 12.5, color: 'var(--text-secondary)' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                            <Calendar size={12} color="var(--text-tertiary)" />
                             <span>{formattedDate}</span>
                           </div>
                         </td>
 
-                        <td style={{ padding: '16px 20px', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                        <td style={{ padding: '12px 14px', textAlign: 'right', whiteSpace: 'nowrap' }}>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -377,7 +425,7 @@ export const TicketsPage: React.FC = () => {
                               display: 'inline-flex',
                               alignItems: 'center',
                               gap: 6,
-                              padding: '6px 12px',
+                              padding: '5px 12px',
                               borderRadius: 'var(--radius-sm)',
                               backgroundColor: 'var(--accent-subtle)',
                               color: 'var(--accent-primary)',
@@ -387,7 +435,7 @@ export const TicketsPage: React.FC = () => {
                               cursor: 'pointer',
                             }}
                           >
-                            <MessageSquare size={13} />
+                            <MessageSquare size={12} />
                             <span>Open & Chat</span>
                           </button>
                         </td>
@@ -400,13 +448,44 @@ export const TicketsPage: React.FC = () => {
           </div>
         ) : (
           /* ==================== USER GRID FORMAT ==================== */
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',
-              gap: 18,
-            }}
-          >
+          <div style={{ position: 'relative' }}>
+            {isFiltering && <div className="table-progress-bar" />}
+            {isFiltering && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: -36,
+                  right: 0,
+                  zIndex: 20,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '4px 10px',
+                  borderRadius: 'var(--radius-full)',
+                  backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                  backdropFilter: 'blur(8px)',
+                  border: '1px solid var(--border-light)',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: 'var(--accent-primary)',
+                  pointerEvents: 'none',
+                }}
+              >
+                <RefreshCw size={12} className="animate-spin" />
+                <span>Updating...</span>
+              </div>
+            )}
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',
+                gap: 18,
+                opacity: isFiltering ? 0.55 : 1,
+                pointerEvents: isFiltering ? 'none' : 'auto',
+                transition: 'opacity var(--transition-fast)',
+              }}
+            >
             {tickets.map((ticket) => {
               const formattedDate = new Date(ticket.createdAt).toLocaleDateString('en-US', {
                 month: 'short',
@@ -595,6 +674,7 @@ export const TicketsPage: React.FC = () => {
                 </div>
               );
             })}
+            </div>
           </div>
         )}
       </main>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { apiClient } from '../api/client';
 import { useToast } from '../context/ToastContext';
 import { Ticket, TicketStatus, TicketPriority, TicketStats, formatTicketId } from '../types';
@@ -30,7 +30,9 @@ export const AdminPage: React.FC = () => {
   const { showToast } = useToast();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [stats, setStats] = useState<TicketStats | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [isFiltering, setIsFiltering] = useState(false);
+  const hasLoadedRef = useRef(false);
   const [loadingStats, setLoadingStats] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | TicketStatus>('all');
@@ -68,7 +70,11 @@ export const AdminPage: React.FC = () => {
   }, [showToast]);
 
   const fetchTickets = useCallback(async () => {
-    setLoading(true);
+    if (!hasLoadedRef.current) {
+      setInitialLoading(true);
+    } else {
+      setIsFiltering(true);
+    }
     try {
       const params = new URLSearchParams();
       if (statusFilter !== 'all') {
@@ -81,11 +87,13 @@ export const AdminPage: React.FC = () => {
 
       const response = await apiClient.get(`/tickets?${params.toString()}`);
       setTickets(response.data.data.tickets || []);
+      hasLoadedRef.current = true;
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to load tickets';
       showToast(msg, 'error');
     } finally {
-      setLoading(false);
+      setInitialLoading(false);
+      setIsFiltering(false);
     }
   }, [statusFilter, priorityFilter, showToast]);
 
@@ -451,7 +459,7 @@ export const AdminPage: React.FC = () => {
         </div>
 
         {/* Tickets Content - Table OR Grid */}
-        {loading ? (
+        {initialLoading ? (
           <div
             style={{
               backgroundColor: 'var(--surface)',
@@ -479,7 +487,7 @@ export const AdminPage: React.FC = () => {
               </div>
             ))}
           </div>
-        ) : filteredTickets.length === 0 ? (
+        ) : filteredTickets.length === 0 && !isFiltering ? (
           <div
             style={{
               backgroundColor: 'var(--surface)',
@@ -501,6 +509,7 @@ export const AdminPage: React.FC = () => {
           /* ==================== TABLE FORMAT ==================== */
           <div
             style={{
+              position: 'relative',
               backgroundColor: 'var(--surface)',
               borderRadius: 'var(--radius-lg)',
               border: '1px solid var(--border-light)',
@@ -508,8 +517,35 @@ export const AdminPage: React.FC = () => {
               overflow: 'hidden',
             }}
           >
+            {isFiltering && <div className="table-progress-bar" />}
+            {isFiltering && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: 10,
+                  right: 14,
+                  zIndex: 20,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '4px 10px',
+                  borderRadius: 'var(--radius-full)',
+                  backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                  backdropFilter: 'blur(8px)',
+                  border: '1px solid var(--border-light)',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: 'var(--accent-primary)',
+                  pointerEvents: 'none',
+                }}
+              >
+                <RefreshCw size={12} className="animate-spin" />
+                <span>Updating...</span>
+              </div>
+            )}
             <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+              <table style={{ width: '100%', tableLayout: 'fixed', borderCollapse: 'collapse', textAlign: 'left' }}>
                 <thead>
                   <tr
                     style={{
@@ -517,30 +553,36 @@ export const AdminPage: React.FC = () => {
                       backgroundColor: '#FBFBFD',
                     }}
                   >
-                    <th style={{ padding: '14px 16px', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    <th style={{ width: 95, padding: '12px 10px', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                       Ticket ID
                     </th>
-                    <th style={{ padding: '14px 20px', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    <th style={{ width: '28%', minWidth: 160, padding: '12px 10px', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                       Ticket Details
                     </th>
-                    <th style={{ padding: '14px 16px', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    <th style={{ width: 105, padding: '12px 8px', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                       Status
                     </th>
-                    <th style={{ padding: '14px 16px', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    <th style={{ width: 95, padding: '12px 8px', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                       Priority
                     </th>
-                    <th style={{ padding: '14px 16px', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    <th style={{ width: 135, padding: '12px 8px', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                       Created By
                     </th>
-                    <th style={{ padding: '14px 16px', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    <th style={{ width: 105, padding: '12px 8px', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                       Date
                     </th>
-                    <th style={{ padding: '14px 20px', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'right' }}>
+                    <th style={{ width: 120, padding: '12px 12px', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'right' }}>
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody
+                  style={{
+                    opacity: isFiltering ? 0.55 : 1,
+                    pointerEvents: isFiltering ? 'none' : 'auto',
+                    transition: 'opacity var(--transition-fast)',
+                  }}
+                >
                   {filteredTickets.map((ticket) => {
                     const formattedDate = new Date(ticket.createdAt).toLocaleDateString('en-US', {
                       month: 'short',
@@ -561,13 +603,13 @@ export const AdminPage: React.FC = () => {
                         onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
                       >
                         {/* Custom Ticket ID */}
-                        <td style={{ padding: '16px 16px', whiteSpace: 'nowrap' }}>
+                        <td style={{ padding: '12px 10px', whiteSpace: 'nowrap' }}>
                           <span
                             style={{
                               display: 'inline-flex',
                               alignItems: 'center',
-                              gap: 5,
-                              padding: '3px 8px',
+                              gap: 4,
+                              padding: '3px 7px',
                               borderRadius: 4,
                               backgroundColor: 'var(--accent-subtle)',
                               color: 'var(--accent-primary)',
@@ -577,21 +619,25 @@ export const AdminPage: React.FC = () => {
                               letterSpacing: '0.02em',
                             }}
                           >
-                            <Tag size={12} />
+                            <Tag size={11} />
                             <span>{formatTicketId(ticket)}</span>
                           </span>
                         </td>
 
-                        {/* Title & Description */}
-                        <td style={{ padding: '16px 20px', maxWidth: 360 }}>
+                        {/* Reduced width & cleanly truncated Ticket Details */}
+                        <td style={{ padding: '12px 10px', overflow: 'hidden' }}>
                           <span
                             style={{
                               display: 'block',
-                              fontSize: 14,
+                              fontSize: 13.5,
                               fontWeight: 600,
                               color: 'var(--text-primary)',
                               marginBottom: 2,
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
                             }}
+                            title={ticket.title}
                           >
                             {ticket.title}
                           </span>
@@ -599,12 +645,13 @@ export const AdminPage: React.FC = () => {
                             <span
                               style={{
                                 display: 'block',
-                                fontSize: 13,
+                                fontSize: 12,
                                 color: 'var(--text-secondary)',
                                 whiteSpace: 'nowrap',
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis',
                               }}
+                              title={ticket.description}
                             >
                               {ticket.description}
                             </span>
@@ -612,33 +659,47 @@ export const AdminPage: React.FC = () => {
                         </td>
 
                         {/* Status */}
-                        <td style={{ padding: '16px 16px', whiteSpace: 'nowrap' }}>
+                        <td style={{ padding: '12px 8px', whiteSpace: 'nowrap' }}>
                           <StatusBadge status={ticket.status} />
                         </td>
 
                         {/* Priority */}
-                        <td style={{ padding: '16px 16px', whiteSpace: 'nowrap' }}>
+                        <td style={{ padding: '12px 8px', whiteSpace: 'nowrap' }}>
                           <PriorityBadge priority={ticket.priority} />
                         </td>
 
                         {/* Created By User Name & Email */}
-                        <td style={{ padding: '16px 16px', whiteSpace: 'nowrap' }}>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <td style={{ padding: '12px 8px', overflow: 'hidden' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 2, overflow: 'hidden' }}>
                             <span
                               style={{
                                 display: 'inline-flex',
                                 alignItems: 'center',
-                                gap: 6,
-                                fontSize: 13,
+                                gap: 5,
+                                fontSize: 12.5,
                                 fontWeight: 600,
                                 color: 'var(--text-primary)',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
                               }}
+                              title={getUserDisplayName(ticket)}
                             >
-                              <User size={13} color="var(--accent-primary)" />
-                              <span>{getUserDisplayName(ticket)}</span>
+                              <User size={12} color="var(--accent-primary)" style={{ flexShrink: 0 }} />
+                              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{getUserDisplayName(ticket)}</span>
                             </span>
                             {getUserDisplayEmail(ticket) && (
-                              <span style={{ fontSize: 11, color: 'var(--text-tertiary)', paddingLeft: 19 }}>
+                              <span
+                                style={{
+                                  fontSize: 11,
+                                  color: 'var(--text-tertiary)',
+                                  paddingLeft: 17,
+                                  whiteSpace: 'nowrap',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                }}
+                                title={getUserDisplayEmail(ticket)}
+                              >
                                 {getUserDisplayEmail(ticket)}
                               </span>
                             )}
@@ -646,17 +707,17 @@ export const AdminPage: React.FC = () => {
                         </td>
 
                         {/* Date */}
-                        <td style={{ padding: '16px 16px', whiteSpace: 'nowrap', fontSize: 13, color: 'var(--text-secondary)' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <Calendar size={13} color="var(--text-tertiary)" />
+                        <td style={{ padding: '12px 8px', whiteSpace: 'nowrap', fontSize: 12.5, color: 'var(--text-secondary)' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                            <Calendar size={12} color="var(--text-tertiary)" />
                             <span>{formattedDate}</span>
                           </div>
                         </td>
 
                         {/* Actions */}
-                        <td style={{ padding: '16px 20px', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                        <td style={{ padding: '12px 12px', textAlign: 'right', whiteSpace: 'nowrap' }}>
                           <div
-                            style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}
+                            style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}
                             onClick={(e) => e.stopPropagation()}
                           >
                             <button
@@ -665,7 +726,7 @@ export const AdminPage: React.FC = () => {
                                 display: 'inline-flex',
                                 alignItems: 'center',
                                 gap: 4,
-                                padding: '6px 12px',
+                                padding: '5px 10px',
                                 borderRadius: 'var(--radius-sm)',
                                 backgroundColor: 'var(--accent-subtle)',
                                 color: 'var(--accent-primary)',
@@ -675,7 +736,7 @@ export const AdminPage: React.FC = () => {
                                 cursor: 'pointer',
                               }}
                             >
-                              <ExternalLink size={13} />
+                              <ExternalLink size={12} />
                               <span>Manage</span>
                             </button>
 
@@ -685,8 +746,7 @@ export const AdminPage: React.FC = () => {
                               style={{
                                 display: 'inline-flex',
                                 alignItems: 'center',
-                                gap: 4,
-                                padding: '6px 10px',
+                                padding: '5px 8px',
                                 borderRadius: 'var(--radius-sm)',
                                 backgroundColor: 'var(--status-danger-bg)',
                                 color: 'var(--status-danger)',
@@ -696,7 +756,7 @@ export const AdminPage: React.FC = () => {
                                 cursor: 'pointer',
                               }}
                             >
-                              <Trash2 size={13} />
+                              <Trash2 size={12} />
                             </button>
                           </div>
                         </td>
@@ -709,13 +769,44 @@ export const AdminPage: React.FC = () => {
           </div>
         ) : (
           /* ==================== GRID FORMAT ==================== */
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(330px, 1fr))',
-              gap: 18,
-            }}
-          >
+          <div style={{ position: 'relative' }}>
+            {isFiltering && <div className="table-progress-bar" />}
+            {isFiltering && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: -36,
+                  right: 0,
+                  zIndex: 20,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '4px 10px',
+                  borderRadius: 'var(--radius-full)',
+                  backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                  backdropFilter: 'blur(8px)',
+                  border: '1px solid var(--border-light)',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: 'var(--accent-primary)',
+                  pointerEvents: 'none',
+                }}
+              >
+                <RefreshCw size={12} className="animate-spin" />
+                <span>Updating...</span>
+              </div>
+            )}
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(330px, 1fr))',
+                gap: 18,
+                opacity: isFiltering ? 0.55 : 1,
+                pointerEvents: isFiltering ? 'none' : 'auto',
+                transition: 'opacity var(--transition-fast)',
+              }}
+            >
             {filteredTickets.map((ticket) => {
               const formattedDate = new Date(ticket.createdAt).toLocaleDateString('en-US', {
                 month: 'short',
@@ -946,6 +1037,7 @@ export const AdminPage: React.FC = () => {
                 </div>
               );
             })}
+            </div>
           </div>
         )}
       </main>
