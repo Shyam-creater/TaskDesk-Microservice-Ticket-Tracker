@@ -132,6 +132,7 @@ TaskDesk/
 ├── .gitignore                        # Git ignore rules (.env, node_modules, dist)
 ├── package.json                      # Root workspace scripts (dev, build, seed, test)
 ├── README.md                         # Comprehensive documentation
+├── TaskDesk-Project-Details.pdf      # Complete PDF technical reference
 │
 ├── gateway/                          # API Gateway (Port 4000)
 │   ├── package.json
@@ -184,9 +185,14 @@ TaskDesk/
 │   ├── package.json
 │   ├── vite.config.ts
 │   └── src/                          # Components, context, pages, styles, types
+│       ├── components/               # Navbar, NotificationBell, TicketCard, ChatModal, etc.
+│       ├── context/                  # AuthContext, TicketContext, NotificationContext
+│       ├── pages/                    # DashboardPage, LoginPage, RegisterPage
+│       └── types/                    # Ticket, User, Notification, Message schemas
 │
 ├── scripts/
-│   └── seed.ts                       # Database seeder across taskdesk_auth & taskdesk_tickets
+│   ├── seed.ts                       # Database seeder across taskdesk_auth & taskdesk_tickets
+│   └── generate-pdf.ts               # Production PDF documentation generator
 │
 └── tests/
     └── microservices.test.ts         # 25-test automated verification suite
@@ -266,7 +272,28 @@ stateDiagram-v2
 
 ---
 
-## 7. Request Tracing Across Services (Correlation ID) & Observability
+## 7. Frontend Architecture & Apple Human Interface Design
+
+The frontend application (`frontend/`) is an enterprise Single Page Application built with **React 18**, **TypeScript**, and **Vite**, engineered according to **Apple Human Interface Guidelines**:
+
+* **Design System & Aesthetics**:
+  * Glassmorphism with `backdrop-filter: blur(20px)` and semi-transparent subtle borders.
+  * System typography using Apple SF Pro Font Hierarchy with consistent tracking and leading.
+  * Adaptive light/dark elevation shadows (`0 8px 32px rgba(0, 0, 0, 0.08)`).
+* **Dual View Modes (Grid & Table)**:
+  * Users and Admins can seamlessly toggle between a high-density tabular view and an interactive card grid.
+  * Live client-side filtering by Status (`open`, `in_review`, `in_progress`, `resolved`, `closed`), Priority (`low`, `medium`, `high`, `urgent`), and instant debounce search across titles and `TD-XXXX` IDs.
+* **Notification Bell & Popover**:
+  * Global navigation bell with real-time polling every 10 seconds.
+  * Live unread badge count with deep-linking that opens the associated ticket modal on click.
+  * Instant "Mark all as read" and individual notification deletion.
+* **Threaded Chat Modal**:
+  * Real-time conversation threads between ticket creator and support staff.
+  * Immediate status-based enforcement: chat input is automatically disabled when the ticket status reaches `closed`.
+
+---
+
+## 8. Request Tracing Across Services (Correlation ID) & Observability
 
 ### 1. Correlation Tracing (`X-Correlation-ID`)
 * Every incoming request receives an `X-Correlation-ID` at the Gateway.
@@ -290,12 +317,28 @@ Every service emits single-line JSON access logs on response completion:
 ```
 
 ### 3. Prometheus Metrics & JSON Telemetry
-* Every service exposes `GET /metrics` in standard Prometheus scrape format (e.g. `gateway_http_requests_total`, `auth_http_requests_total`, `ticket_http_requests_total`, `notification_http_requests_total`).
+* Every service exposes `GET /metrics` in standard Prometheus scrape format (`gateway_http_requests_total`, `auth_http_requests_total`, `ticket_http_requests_total`, `notification_http_requests_total`).
 * The Gateway exposes real-time application health at `GET /api/metrics`.
 
 ---
 
-## 8. Automated Testing Suite (25/25 Tests Passing)
+## 9. Runtime Input Validation (Zod Schemas)
+
+All incoming payloads are strictly validated before hitting controller business logic. Invalid inputs immediately return `400 Bad Request` with structured error details:
+
+* **Authentication (`auth.controller.ts`)**:
+  * `registerSchema`: `name` (min 2 chars), `email` (valid email format), `password` (min 6 chars).
+  * `loginSchema`: `email` (valid email format), `password` (required).
+* **Ticket Management (`ticket.controller.ts`)**:
+  * `createTicketSchema`: `title` (3-120 chars), `description` (min 5 chars), `priority` (`low` | `medium` | `high` | `urgent`).
+  * `updateTicketSchema`: `title` (optional, 3-120 chars), `description` (optional, min 5 chars), `priority` (optional).
+  * `updateStatusSchema`: `status` (`open` | `in_review` | `in_progress` | `resolved` | `closed`), `note` (optional).
+  * `reviewTicketSchema`: `priority` (`low` | `medium` | `high` | `urgent`), `reviewNotes` (optional).
+  * `createMessageSchema`: `body` (1-2000 chars).
+
+---
+
+## 10. Automated Testing Suite (25/25 Tests Passing)
 
 TaskDesk includes a comprehensive end-to-end integration test suite verifying authentication, ticket creation, RBAC rules, request tracing, microservice isolation, and resilience.
 
@@ -353,7 +396,7 @@ npm test
 
 ---
 
-## 9. Installation & Quick Start
+## 11. Installation & Quick Start
 
 ### Prerequisites
 * **Node.js** >= 18.x
@@ -377,10 +420,25 @@ Copy the template to create your `.env` file:
 ```bash
 cp .env.example .env
 ```
-Ensure your `.env` contains valid values for:
-* `MONGODB_URI`: Your MongoDB Atlas URI or `mongodb://localhost:27017`
-* `JWT_SECRET`: A secure string at least 32 characters long
-* `INTERNAL_SERVICE_KEY`: A shared internal secret for inter-service communication
+
+#### Environment Variables Reference
+
+| Variable | Default Value | Description |
+| :--- | :--- | :--- |
+| `PORT` | `4000` | Port for the central API Gateway |
+| `AUTH_SERVICE_PORT` | `4001` | Port for Auth Microservice |
+| `TICKET_SERVICE_PORT` | `4002` | Port for Ticket Microservice |
+| `NOTIFICATION_SERVICE_PORT` | `4003` | Port for Notification Microservice |
+| `AUTH_SERVICE_URL` | `http://localhost:4001` | Gateway reverse-proxy target for Auth |
+| `TICKET_SERVICE_URL` | `http://localhost:4002` | Gateway reverse-proxy target for Tickets |
+| `NOTIFICATION_SERVICE_URL` | `http://localhost:4003` | Gateway reverse-proxy target for Notifications |
+| `NODE_ENV` | `development` | Runtime environment mode |
+| `CORS_ORIGIN` | `http://localhost:5173` | Strict origin policy for API Gateway |
+| `JWT_SECRET` | *(string >= 32 chars)* | Shared cryptographic secret for JWT signing & verification |
+| `JWT_EXPIRES_IN` | `7d` | Token validity duration |
+| `INTERNAL_SERVICE_KEY` | *(shared secret string)* | Header key protecting `/internal/*` service-to-service calls |
+| `MONGODB_URI` | *(Atlas or local URI)* | MongoDB connection string (services append respective dbName) |
+| `VITE_API_URL` | `http://localhost:4000/api` | Frontend API client base URL |
 
 ### 4. Seed the Databases
 Initializes administrative accounts, demo users, and sample tickets across `taskdesk_auth` and `taskdesk_tickets`:
@@ -399,7 +457,7 @@ Open your browser at **`http://localhost:5173`**.
 
 ---
 
-## 10. Demo Credentials
+## 12. Demo Credentials
 
 Quick-fill demo buttons are provided directly on the login page:
 
@@ -410,7 +468,7 @@ Quick-fill demo buttons are provided directly on the login page:
 
 ---
 
-## 11. AI Tools Used
+## 13. AI Tools Used
 
 The following AI tools and foundational models were used in the engineering and architectural execution of TaskDesk:
 
@@ -423,7 +481,7 @@ The following AI tools and foundational models were used in the engineering and 
 
 ---
 
-## 12. Trade-offs & Future Improvements
+## 14. Trade-offs & Future Improvements
 
 1. **Shared Database Cluster vs Physical Database Isolation**:
    * *Current:* Services connect to distinct database namespaces (`taskdesk_auth`, `taskdesk_tickets`, `taskdesk_notifications`) on the same Atlas cluster.
@@ -443,7 +501,7 @@ The following AI tools and foundational models were used in the engineering and 
 
 ---
 
-## 13. API Reference
+## 15. Complete API Reference
 
 All client API traffic is addressed to the API Gateway at `http://localhost:4000/api`.
 

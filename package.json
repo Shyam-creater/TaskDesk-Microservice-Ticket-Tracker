@@ -18,7 +18,8 @@
     "build:frontend": "cd frontend && npm run build",
     "build": "npm run build:gateway && npm run build:auth && npm run build:ticket && npm run build:notification && npm run build:frontend",
     "seed": "tsx scripts/seed.ts",
-    "test": "tsx tests/microservices.test.ts"
+    "test": "tsx tests/microservices.test.ts",
+    "generate:pdf": "node scripts/generate-pdf.js"
   },
   "keywords": [
     "taskdesk",
