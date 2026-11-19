@@ -2,18 +2,47 @@
   "name": "taskdesk",
   "version": "1.0.0",
   "private": true,
-  "description": "TaskDesk - Support Ticket Tracker (Frontend & Backend MVC Architecture)",
+  "description": "TaskDesk - Microservices Support Ticket Tracker",
   "scripts": {
-    "dev:backend": "cd backend && npm run dev",
+    "install:all": "npm install && npm install --prefix gateway && npm install --prefix services/auth-service && npm install --prefix services/ticket-service && npm install --prefix services/notification-service && npm install --prefix frontend",
+    "dev": "concurrently -k -n \"GATEWAY,AUTH,TICKET,NOTIF,FRONTEND\" -c \"magenta,blue,green,yellow,cyan\" \"npm run dev:gateway\" \"npm run dev:auth\" \"npm run dev:ticket\" \"npm run dev:notification\" \"npm run dev:frontend\"",
+    "dev:gateway": "cd gateway && npm run dev",
+    "dev:auth": "cd services/auth-service && npm run dev",
+    "dev:ticket": "cd services/ticket-service && npm run dev",
+    "dev:notification": "cd services/notification-service && npm run dev",
     "dev:frontend": "cd frontend && npm run dev",
-    "build:backend": "cd backend && npm run build",
+    "build:gateway": "cd gateway && npm run build",
+    "build:auth": "cd services/auth-service && npm run build",
+    "build:ticket": "cd services/ticket-service && npm run build",
+    "build:notification": "cd services/notification-service && npm run build",
     "build:frontend": "cd frontend && npm run build",
-    "build": "npm run build:backend && npm run build:frontend",
-    "start": "cd backend && npm start",
-    "seed": "cd backend && npm run seed",
-    "test": "npm test --prefix backend"
+    "build": "npm run build:gateway && npm run build:auth && npm run build:ticket && npm run build:notification && npm run build:frontend",
+    "seed": "tsx scripts/seed.ts",
+    "test": "tsx tests/microservices.test.ts"
   },
-  "keywords": ["taskdesk", "mvc", "typescript", "mongodb", "react", "express"],
+  "keywords": [
+    "taskdesk",
+    "microservices",
+    "api-gateway",
+    "typescript",
+    "mongodb",
+    "react",
+    "express"
+  ],
   "author": "TaskDesk Team",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.7.9",
+    "bcryptjs": "^3.0.3",
+    "http-proxy-middleware": "^3.0.3",
+    "mongoose": "^9.12.2"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^20.12.7",
+    "concurrently": "^9.1.2",
+    "dotenv": "^16.4.5",
+    "tsx": "^4.7.2",
+    "typescript": "^5.4.5"
+  }
 }
