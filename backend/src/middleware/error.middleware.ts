@@ -45,26 +45,30 @@ export class ConflictError extends AppError {
 
 export const errorHandler = (
   err: Error | AppError,
-  _req: Request,
+  req: Request,
   res: Response,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _next: NextFunction
 ): void => {
+  const correlationId = req.correlationId || (req.headers['x-correlation-id'] as string);
+
   if (err instanceof AppError) {
     res.status(err.statusCode).json({
       error: {
         code: err.code,
         message: err.message,
       },
+      correlationId,
     });
     return;
   }
 
-  console.error('Unhandled Server Error:', err);
+  console.error(`[${correlationId}] Unhandled Server Error:`, err);
   res.status(500).json({
     error: {
       code: 'INTERNAL_ERROR',
       message: 'An unexpected internal error occurred',
     },
+    correlationId,
   });
 };

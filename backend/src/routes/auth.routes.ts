@@ -2,14 +2,15 @@ import { Router } from 'express';
 import { authController } from '../controllers/auth.controller.js';
 import { authLimiter } from '../middleware/rateLimiter.middleware.js';
 import { authenticateToken } from '../middleware/auth.middleware.js';
+import { validateBody, registerSchema, loginSchema } from '../middleware/validate.middleware.js';
 
 const router = Router();
 
-router.post('/register', authLimiter, (req, res, next) => {
+router.post('/register', authLimiter, validateBody(registerSchema), (req, res, next) => {
   authController.register(req, res, next);
 });
 
-router.post('/login', authLimiter, (req, res, next) => {
+router.post('/login', authLimiter, validateBody(loginSchema), (req, res, next) => {
   authController.login(req, res, next);
 });
 
